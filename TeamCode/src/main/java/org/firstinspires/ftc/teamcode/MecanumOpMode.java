@@ -21,56 +21,81 @@ public class MecanumOpMode extends LinearOpMode {
     DcMotor frMotor;
     DcMotor blMotor;
     DcMotor brMotor;
-    CRServo hopperio;
+
+    Servo indexer;
 
     /*
-    elbow is 2 and jaw is 3 on hub 3
-     */
+    TODO:
+    Lower the elbow down position
+    make hopper go down when intake same thing with the sequencer
+    put a slower shooter button
+    give both dpads slow bot movement
 
+     */
     @Override
     public void runOpMode() throws InterruptedException
     {
-        elbow = hardwareMap.servo.get("elbow");
-        jaw = hardwareMap.crservo.get("jaw");
 
-        intake = hardwareMap.dcMotor.get("intake");
-        shooter1 = hardwareMap.dcMotor.get("shooter1");
-        shooter2 = hardwareMap.dcMotor.get("shooter2");
-        transfer = hardwareMap.dcMotor.get("transfer");
+        //mapping motors
+        intake      = hardwareMap.dcMotor.get("intake");
+        shooter1    = hardwareMap.dcMotor.get("shooter1");
+        shooter2    = hardwareMap.dcMotor.get("shooter2");
+        transfer    = hardwareMap.dcMotor.get("transfer");
+        flMotor     = hardwareMap.dcMotor.get("fl");
+        frMotor     = hardwareMap.dcMotor.get("fr");
+        blMotor     = hardwareMap.dcMotor.get("bl");
+        brMotor     = hardwareMap.dcMotor.get("br");
 
-        flMotor = hardwareMap.dcMotor.get("fl");
-        frMotor = hardwareMap.dcMotor.get("fr");
-        blMotor = hardwareMap.dcMotor.get("bl");
-        brMotor = hardwareMap.dcMotor.get("br");
-
-        hopperio = hardwareMap.crservo.get("crservo");
+        //mapping servos
+        elbow       = hardwareMap.servo.get("elbow");
+        jaw         = hardwareMap.crservo.get("jaw");
         hopperServo = hardwareMap.servo.get("hopperangle");
+        indexer     = hardwareMap.servo.get("indexer");
 
+        //initializing default servo value
         double hopperInputAngle = .1;
         double hopperOutputAngle = .29;
         double hopperAngle = hopperInputAngle;
         double elbowAngle = 0;
         double jawPower;
+        double indexerAngle = 0;
+
+        //setting shooters to use encoders
+        shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         waitForStart();
+
         while(opModeIsActive())
         {
             jawPower = 0;
-            double intakePower      = -gamepad1.right_trigger;
-            double shooterPower     = -gamepad1.left_trigger;
-            double hopperPower      = 0;//gamepad1.right_bumper ? 1:0;
-            double transferPower    = gamepad1.right_trigger;
+            //
+            double intakePower      = gamepad1.left_trigger;
+            double shooterPower     = -gamepad1.right_trigger;
+            double transferPower    = gamepad1.left_trigger;
 
-            if(gamepad2.right_trigger > gamepad1.right_trigger)
+            boolean gamepad2IsDominant = gamepad2.right_trigger > gamepad1.right_trigger;
+            boolean rightTriggerOnePressed = gamepad1.right_trigger < .1;
+            boolean leftTriggerOnePressed = gamepad1.left_trigger > .1;
+
+            if(gamepad1.left_trigger > .2){
+                hopperAngle = hopperInputAngle;
+                indexerAngle = 0;
+            }
+
+            if(gamepad2IsDominant)
             {
                 transferPower = -gamepad2.right_trigger;
-                intakePower = gamepad2.right_trigger;
+                intakePower = -gamepad2.right_trigger;
             }
-            if (gamepad1.right_trigger < .1)
+
+            if (gamepad1.right_bumper)
             {
-                hopperPower = gamepad1.right_bumper ? 1 : 0;
+                indexerAngle = 0;
             }
-            else {
-                hopperPower = -gamepad1.right_trigger/2;
+            else if (gamepad1.left_bumper)
+            {
+                indexerAngle = 70;
             }
 
             flMotor.setDirection(DcMotor.Direction.REVERSE);
@@ -81,15 +106,17 @@ public class MecanumOpMode extends LinearOpMode {
             double twist = -gamepad1.right_stick_x;
 
 
-            if (gamepad1.x) hopperAngle = hopperInputAngle;
+            if (gamepad1.x) {
+                hopperAngle = hopperInputAngle;
+                indexerAngle = 0;
+            }
             else if (gamepad1.y) hopperAngle= hopperOutputAngle;
 
-            if ( gamepad2.a)  elbowAngle = 0.3;
-            else if ( gamepad2.b) elbowAngle = 0.65;
+            if ( gamepad2.a)  elbowAngle = 0.28;
+            else if ( gamepad2.b) elbowAngle = 0.70;
 
             if (gamepad2.x) jawPower = .5;
             else if ( gamepad2.y) jawPower = -.5;
-
 
             double[] speeds = {
                     (drive + strafe +twist),
@@ -107,13 +134,40 @@ public class MecanumOpMode extends LinearOpMode {
             {
                 for ( int i = 0; i < speeds.length; i++ ) speeds[i] /= max;
             }
+            if(gamepad2.dpad_up || gamepad1.dpad_up) {
+                flMotor.setPower(-.25);
+                frMotor.setPower(-.25);
+                brMotor.setPower(-.25);
+                blMotor.setPower(-.25);
+            }
+            else if(gamepad2.dpad_right || gamepad1.dpad_right){
+                flMotor.setPower(-.25);
+                frMotor.setPower(.25);
+                brMotor.setPower(.25);
+                blMotor.setPower(-.25);
+            }
+            else if(gamepad2.dpad_left || gamepad1.dpad_left){
+                flMotor.setPower(.25);
+                frMotor.setPower(-.25);
+                brMotor.setPower(-.25);
+                blMotor.setPower(.25);
+            }
+            else if(gamepad2.dpad_down || gamepad1.dpad_down){
+                flMotor.setPower(.25);
+                frMotor.setPower(.25);
+                brMotor.setPower(.25);
+                blMotor.setPower(.25);
+            }
+            else {
+                flMotor.setPower(speeds[0]);
+                frMotor.setPower(speeds[1]);
+                blMotor.setPower(speeds[2]);
+                brMotor.setPower(speeds[3]);
+            }
 
-            flMotor.setPower(speeds[0]);
-            frMotor.setPower(speeds[1]);
-            blMotor.setPower(speeds[2]);
-            brMotor.setPower(speeds[3]);
 
-            hopperio.setPower(hopperPower);
+
+            indexer.setPosition(indexerAngle);
 
             shooter1.setPower(shooterPower);
             shooter2.setPower(shooterPower);
