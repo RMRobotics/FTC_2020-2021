@@ -62,7 +62,7 @@ public class MecanumOpMode extends LinearOpMode {
 
         //setting shooters to use encoders
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         waitForStart();
 
