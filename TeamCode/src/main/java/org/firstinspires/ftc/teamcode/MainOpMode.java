@@ -58,18 +58,18 @@ public class MainOpMode extends LinearOpMode {
 
         // Initialize necessary engines and devices.
         vuforiaUltimateGoal = new VuforiaCurrentGame();
-        drive = new SampleMecanumDrive(hardwareMap);
-        tfodUltimateGoal = new TfodCurrentGame();
-        hopperangle = hardwareMap.get(Servo.class, "hopperangle");
-        shooter1 = hardwareMap.get(DcMotor.class, "shooter1");
-        shooter2 = hardwareMap.get(DcMotor.class, "shooter2");
-        fl = hardwareMap.get(DcMotor.class, "fl");
-        bl = hardwareMap.get(DcMotor.class, "bl");
-        fr = hardwareMap.get(DcMotor.class, "fr");
-        br = hardwareMap.get(DcMotor.class, "br");
-        indexer = hardwareMap.get(Servo.class, "indexer");
-        elbow = hardwareMap.get(Servo.class, "elbow");
-        jaw = hardwareMap.get(CRServo.class, "jaw");
+        drive               = new SampleMecanumDrive(hardwareMap);
+        tfodUltimateGoal    = new TfodCurrentGame();
+        hopperangle         = hardwareMap.get(Servo.class, "hopperangle");
+        shooter1            = hardwareMap.get(DcMotor.class, "shooter1");
+        shooter2            = hardwareMap.get(DcMotor.class, "shooter2");
+        fl                  = hardwareMap.get(DcMotor.class, "fl");
+        bl                  = hardwareMap.get(DcMotor.class, "bl");
+        fr                  = hardwareMap.get(DcMotor.class, "fr");
+        br                  = hardwareMap.get(DcMotor.class, "br");
+        indexer             = hardwareMap.get(Servo.class, "indexer");
+        elbow               = hardwareMap.get(Servo.class, "elbow");
+        jaw                 = hardwareMap.get(CRServo.class, "jaw");
 
         // Initialize TensorFlow engine.
         tfodUltimateGoal.initialize(
@@ -92,12 +92,12 @@ public class MainOpMode extends LinearOpMode {
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         ShooterPowerSettingHigh = 0.9;
-        ShooterPowerSettingLow = 0.6;
-        IndexerUpPosition = 0.2;
-        IndexerDownPosition = 0.8;
-        ElbowForwardPosition = 0.7;
-        ElbowBackward = 0;
-        ShootingTime = 2;
+        ShooterPowerSettingLow  = 0.6;
+        IndexerUpPosition       = 0.2;
+        IndexerDownPosition     = 0.8;
+        ElbowForwardPosition    = 0.7;
+        ElbowBackward           = 0;
+        ShootingTime            = 2;
 
         // Wait for start command from Driver Station.
         waitForStart();
