@@ -5,7 +5,6 @@ import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -34,18 +33,21 @@ public class MainOpMode extends LinearOpMode {
     private Servo hopperangle;
     private Servo indexer;
     private Servo elbow;
-    private CRServo jaw;
+    private Servo jaw;
 
     Recognition recognition;
-    double WobbleGoalZone;
-    double ShooterPowerSettingLow;
-    double ShooterPowerSettingHigh;
-    double IndexerUpPosition;
-    double IndexerDownPosition;
-    double ElbowForwardPosition;
-    double ElbowBackward;
+    double wobbleGoalZone;
+    double shooterPowerSettingLow;
+    double shooterPowerSettingHigh;
+    double indexerUpPosition;
+    double indexerDownPosition;
+    double elbowForwardPosition;
+    double elbowBackwardPosition;
+    double jawOpenPosition;
+    double jawClosePosition;
 
-    double ShootingTime;
+    double shooterPrepTime1;
+    double shooterPrepTime2;
 
     /**
      * Operation mode method.
@@ -69,7 +71,7 @@ public class MainOpMode extends LinearOpMode {
         br                  = hardwareMap.get(DcMotor.class, "br");
         indexer             = hardwareMap.get(Servo.class, "indexer");
         elbow               = hardwareMap.get(Servo.class, "elbow");
-        jaw                 = hardwareMap.get(CRServo.class, "jaw");
+        jaw                 = hardwareMap.get(Servo.class, "jaw");
 
         // Initialize TensorFlow engine.
         tfodUltimateGoal.initialize(
@@ -91,13 +93,16 @@ public class MainOpMode extends LinearOpMode {
         hopperangle.setPosition(0.29);
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        ShooterPowerSettingHigh = 0.9;
-        ShooterPowerSettingLow  = 0.6;
-        IndexerUpPosition       = 0.2;
-        IndexerDownPosition     = 0.8;
-        ElbowForwardPosition    = 0.7;
-        ElbowBackward           = 0;
-        ShootingTime            = 2;
+        shooterPowerSettingHigh = 0.9;
+        shooterPowerSettingLow  = 0.6;
+        indexerUpPosition       = 0.2;
+        indexerDownPosition     = 0.8;
+        elbowForwardPosition    = 0.7;
+        elbowBackwardPosition   = 0;
+        jawOpenPosition         = 0; // TODO set position for jaw, also needs tele-op.
+        jawClosePosition        = 0;
+        shooterPrepTime1 = 1; // TODO Test with robot, also estimate.
+        shooterPrepTime2 = 0;
 
         // Wait for start command from Driver Station.
         waitForStart();
@@ -112,7 +117,7 @@ public class MainOpMode extends LinearOpMode {
                 if (recognitions.size() == 0) {
                     telemetry.addData("TFOD", "No items detected.");
                     telemetry.addData("TargetZone", "A");
-                    WobbleGoalZone = 1;
+                    wobbleGoalZone = 1;
                 }
 
                 // Otherwise, display info for each recognition.
@@ -136,9 +141,9 @@ public class MainOpMode extends LinearOpMode {
                     telemetry.update();
 
                     // Determine trajectory.
-                    if (WobbleGoalZone == 2) {
+                    if (wobbleGoalZone == 2) {
                         middleZone();
-                    } else if (WobbleGoalZone == 3) {
+                    } else if (wobbleGoalZone == 3) {
                         farZone();
                     } else {
                         closeZone();
@@ -153,23 +158,21 @@ public class MainOpMode extends LinearOpMode {
      */
     private void closeZone() {
         // Build trajectory.
-        trajectory = drive.trajectoryBuilder(new Pose2d())
-                // Spline to powershot position.
-                .splineTo(new Vector2d(-62, -50), Math.toRadians(30))
+        trajectory = drive.trajectoryBuilder(new Pose2d(-62, -50)) // 1) Start.
+                // 2) Spline to powershot position.
+                .splineTo(new Vector2d(-1, -50), Math.toRadians(30))
 
                 // Ready shooter motors.
-                .addTemporalMarker(1, () -> {
-                    shooter1.setPower(ShooterPowerSettingLow);
-                    shooter2.setPower(ShooterPowerSettingLow);
-                })
+                .addTemporalMarker(shooterPrepTime1, this::readyShooters)
 
                 // Shoot 3 powershots.
                 .addDisplacementMarker(() -> {
-                    // Set indexer positions.
+                    // Set hopper indexer positions.
                     for (int i = 0; i < 3; i++) {
-                        // TODO Test how long servo takes at the Makerspace.
-                        indexer.setPosition(IndexerUpPosition);
-                        indexer.setPosition(IndexerDownPosition);
+                        // Shoot a ring.
+                        shoot();
+
+                        // Turn 5° counterclockwise.
                         drive.turn(Math.toRadians(5));
                     }
 
@@ -178,27 +181,63 @@ public class MainOpMode extends LinearOpMode {
                     shooter2.setPower(0);
                 })
 
-                // Spline to close zone.
-                .splineTo(new Vector2d(51, -60), Math.toRadians(0))
+                // 3) Spline to 1st drop-off point at far zone.
+                .splineToSplineHeading(
+                        new Pose2d(41, -53, Math.toRadians(0)), // Face north.
+                        Math.toRadians(90) // Tangent at 30°.
+                )
 
-                // Drop the wobble goal.
-                .addDisplacementMarker(() -> elbow.setPosition(ElbowForwardPosition))
-                .addTemporalMarker(4.7 + ShootingTime, () -> jaw.setPower(-1))
-                .addTemporalMarker(5.2 + ShootingTime, () -> jaw.setPower(0))
+                // Drop the first wobble goal.
+                .addDisplacementMarker(this::dropWobbleGoal)
 
-                // Spline to second wobble goal.
-                .splineTo(new Vector2d(-40, -25.5), Math.toRadians(0))
+                // 4) Spline to second wobble goal.
+                .splineToSplineHeading(
+                        new Pose2d(-40, -25.5, Math.toRadians(270)), // Face east.
+                        Math.toRadians(270) // Tangent at 270°.
+                )
 
                 // Pick up the second wobble goal.
-                .addDisplacementMarker(() -> elbow.setPosition(ElbowForwardPosition))
-                .addTemporalMarker(9.8 + ShootingTime, () -> jaw.setPower(1))
-                .addTemporalMarker(10.3 + ShootingTime, () -> jaw.setPower(0))
+                .addDisplacementMarker(this::obtainWobbleGoal)
+
+                // 5) Spline to starter stack.
+                .splineToSplineHeading(
+                        new Pose2d(-28.5, -36.5, Math.toRadians(0)),  // Face north.
+                        Math.toRadians(0) // Tangent at 0°.
+                )
+
+                // TODO Run intake mechanism to collect 3 rings.
+
+
+
+                // 6) Spline to shooting point.
+                .splineTo(new Vector2d(-12, -36.5), Math.toRadians(0))
+
+                // Ready shooter motors.
+                .addTemporalMarker(1, this::readyShooters)
+
+                // Shoot 3 rings into high goal.
+                .addDisplacementMarker(() -> {
+                    for (int i = 0; i < 3; i++)
+                        shoot();
+                })
+
+                // Open elbow before parking.
+                .addDisplacementMarker(() -> elbow.setPosition(elbowForwardPosition))
+
+                // Drop the second wobble goal.
+                .addDisplacementMarker(this::obtainWobbleGoal)
+
+                // 7) Spline to 2nd drop-off point at far zone.
+                .splineTo(new Vector2d(59, -35), Math.toRadians(270))
+
+                // 8) Spline to parking point.
+                .splineTo(new Vector2d(11, -30), Math.toRadians(90))
 
                 // Return trajectory.
                 .build();
 
-        // TODO Close elbow before shooting.
-        // TODO Open elbow before parking.
+                // TODO Close elbow before shooting.
+                // TODO Open elbow before parking.
     }
 
     /**
@@ -217,13 +256,33 @@ public class MainOpMode extends LinearOpMode {
 
     /**
      * Shoot a ring from the robot.
-     private void Shoot() {
-     indexer.setPosition(IndexerUpPosition);
-     sleep(1000);
-     indexer.setPosition(IndexerDownPosition);
-     sleep(1000);
-     }
      */
+    private void shoot() {
+        // TODO Test how long servo takes at the Makerspace.
+        indexer.setPosition(indexerUpPosition);
+        indexer.setPosition(indexerDownPosition);
+    }
+
+    /**
+     * Ready shooter motors.
+     */
+    private void readyShooters() {
+        shooter1.setPower(shooterPowerSettingLow);
+        shooter2.setPower(shooterPowerSettingLow);
+    }
+
+    /**
+     * Drop wobble goal.
+     */
+    private void dropWobbleGoal() {
+        elbow.setPosition(elbowForwardPosition);
+        jaw.setPosition(jawOpenPosition);
+    }
+
+    private void obtainWobbleGoal() {
+        elbow.setPosition(elbowForwardPosition);
+        jaw.setPosition(jawClosePosition);
+    }
 
     /**
      * Display info (using telemetry) for a recognized object.
@@ -243,10 +302,10 @@ public class MainOpMode extends LinearOpMode {
         // Display Target Zone
         if (recognition.getLabel().equals("Single")) {
             telemetry.addData("TargetZone", "B");
-            WobbleGoalZone = 2;
+            wobbleGoalZone = 2;
         } else if (recognition.getLabel().equals("Quad")) {
             telemetry.addData("TargetZone", "C");
-            WobbleGoalZone = 3;
+            wobbleGoalZone = 3;
         } else {
             telemetry.addData("TargetZone", "UNKNOWN");
         }
