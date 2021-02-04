@@ -25,6 +25,7 @@ public class MainOpMode extends LinearOpMode {
 
     private DcMotor shooter1;
     private DcMotor shooter2;
+    private DcMotor intake;
     private DcMotor fl;
     private DcMotor bl;
     private DcMotor fr;
@@ -39,6 +40,8 @@ public class MainOpMode extends LinearOpMode {
     double wobbleGoalZone;
     double shooterPowerSettingLow;
     double shooterPowerSettingHigh;
+    double intakePowerSetting;
+    double intakeDistance;
     double indexerUpPosition;
     double indexerDownPosition;
     double elbowForwardPosition;
@@ -49,8 +52,11 @@ public class MainOpMode extends LinearOpMode {
     double jawClosePosition;
     double powershotAngle;
 
-    double shooterPrepTime1;
-    double shooterPrepTime2;
+    double shootingTimeFarZone1;
+    double shootingTimeFarZone2;
+    double shootingTimeMiddleZone1;
+    double shootingTimeMiddleZone2;
+    double shootingTimeCloseZone;
 
     /**
      * Operation mode method.
@@ -68,6 +74,7 @@ public class MainOpMode extends LinearOpMode {
         hopper              = hardwareMap.get(Servo.class, "hopperangle");
         shooter1            = hardwareMap.get(DcMotor.class, "shooter1");
         shooter2            = hardwareMap.get(DcMotor.class, "shooter2");
+        intake              = hardwareMap.get(DcMotor.class, "intake");
         fl                  = hardwareMap.get(DcMotor.class, "fl");
         bl                  = hardwareMap.get(DcMotor.class, "bl");
         fr                  = hardwareMap.get(DcMotor.class, "fr");
@@ -92,23 +99,32 @@ public class MainOpMode extends LinearOpMode {
         telemetry.addData(">", "Press Play to start");
         telemetry.update();
 
-        // Configure all devices and variables before operation.
+        // Configure all devices before operation.
         hopper.setPosition(0.29);
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        // Configure all variables before operation.
         shooterPowerSettingHigh = 0.9;
         shooterPowerSettingLow  = 0.6;
-        indexerUpPosition       = 0.2;
-        indexerDownPosition     = 0.8;
+        intakePowerSetting      = 1;
+        intakeDistance          = 0;    // TODO fix with robot, currently set to 0.
+        indexerUpPosition       = 70;  // TODO fix wth robot.
+        indexerDownPosition     = 0;  // TODO fix wth robot.
         elbowForwardPosition    = 0.7;
-        elbowBackwardPosition   = 0;
-        hopperInputAngle        = 0.1;
-        hopperOutputAngle       = 0.29;
-        jawOpenPosition         = 0; // TODO set position for jaw, also needs tele-op.
-        jawClosePosition        = 0; // TODO set position for jaw, also needs tele-op.
-        powershotAngle          = 5;
-        shooterPrepTime1 = 1; // TODO Test with robot, also estimate.
-        shooterPrepTime2 = 0;
+        elbowBackwardPosition   = 0.28;
+        hopperInputAngle        = 0.1;  // TODO Hopper up position = 0.29
+        hopperOutputAngle       = 0.29; // TODO Hopper down position = 0.1
+        jawOpenPosition         = 0;    // TODO set position for jaw, also needs tele-op.
+        jawClosePosition        = 0;    // TODO set position for jaw, also needs tele-op.
+        powershotAngle          = 5;    // TODO test at Makerspace.
+
+        // Configure duration settings before operation.
+        shootingTimeFarZone1        = 1;    // TODO Test with robot, also estimate.
+        shootingTimeFarZone2        = 0;    // TODO Use road runner GUI.
+        shootingTimeMiddleZone1     = 0;
+        shootingTimeMiddleZone2     = 0;
+        shootingTimeCloseZone       = 0;
 
         // Wait for start command from Driver Station.
         waitForStart();
@@ -175,7 +191,7 @@ public class MainOpMode extends LinearOpMode {
                 .splineTo(new Vector2d(-1, -50), Math.toRadians(30))
 
                 // Ready shooter motors.
-                .addTemporalMarker(shooterPrepTime1, this::activateShooters)
+                .addTemporalMarker(shootingTimeFarZone1, this::activateShooters)
 
                 // Shoot 3 powershots.
                 .addDisplacementMarker(() -> {
@@ -199,18 +215,20 @@ public class MainOpMode extends LinearOpMode {
                 .splineTo(new Vector2d(-28.5, -36.5), Math.toRadians(0))
 
                 // Run intake mechanism to collect 3 rings.
-                .addDisplacementMarker(this::intake)
+                .addDisplacementMarker(this::activateIntake)
+                .forward(intakeDistance)
+                .addDisplacementMarker(this::deactivateIntake)
 
                 // 6) Spline to shooting point.
                 .splineTo(new Vector2d(-12, -36.5), Math.toRadians(0))
 
                 // Ready shooter motors.
-                .addTemporalMarker(shooterPrepTime2, this::activateShooters)
+                .addTemporalMarker(shootingTimeFarZone2, this::activateShooters)
 
                 // Shoot 3 rings into high goal.
                 .addDisplacementMarker(() -> {
-                    for (int i = 0; i < 3; i++)
-                        shoot();
+                    shootHighGoals();
+                    deactivateShooters();
                 })
 
                 // 7) Spline to 2nd drop-off point at far zone.
@@ -236,7 +254,7 @@ public class MainOpMode extends LinearOpMode {
                 .splineTo(new Vector2d(-1, -50), Math.toRadians(30))
 
                 // Ready shooter motors.
-                .addTemporalMarker(shooterPrepTime1, this::activateShooters)
+                .addTemporalMarker(shootingTimeMiddleZone1, this::activateShooters)
 
                 // Shoot 3 powershots.
                 .addDisplacementMarker(() -> {
@@ -259,19 +277,21 @@ public class MainOpMode extends LinearOpMode {
                 // 5) Spline to starter stack.
                 .splineTo(new Vector2d(-28.5, -36.5), Math.toRadians(0))
 
-                // Run intake mechanism to collect 3 rings.
-                .addDisplacementMarker(this::intake)
+                // Run intake mechanism to collect 1 ring.
+                .addDisplacementMarker(this::activateIntake)
+                .forward(intakeDistance)
+                .addDisplacementMarker(this::deactivateIntake)
 
                 // 6) Spline to shooting point.
                 .splineTo(new Vector2d(-12, -36.5), Math.toRadians(0))
 
                 // Ready shooter motors.
-                .addTemporalMarker(shooterPrepTime2, this::activateShooters)
+                .addTemporalMarker(shootingTimeMiddleZone2, this::activateShooters)
 
                 // Shoot 3 rings into high goal.
                 .addDisplacementMarker(() -> {
-                    for (int i = 0; i < 3; i++)
-                        shoot();
+                    shootHighGoals();
+                    deactivateShooters();
                 })
 
                 // 7) Spline to 2nd drop-off point at middle zone.
@@ -294,7 +314,7 @@ public class MainOpMode extends LinearOpMode {
                 .splineTo(new Vector2d(-1, -50), Math.toRadians(30))
 
                 // Ready shooter motors.
-                .addTemporalMarker(shooterPrepTime1, this::activateShooters)
+                .addTemporalMarker(shootingTimeCloseZone, this::activateShooters)
 
                 // Shoot 3 powershots.
                 .addDisplacementMarker(() -> {
@@ -328,10 +348,34 @@ public class MainOpMode extends LinearOpMode {
     }
 
     /**
+     * Run intake mechanism.
+     */
+    private void activateIntake() {
+        // TODO Sort out entire intake and high goal code,
+        // TODO Set hopper down when intaking
+
+        // Set hopper down.
+        hopper.setPosition(hopperInputAngle);
+
+        // Run intake mechanism.
+        intake.setPower(intakePowerSetting);
+    }
+
+    /**
+     * Turn off intake mechanism.
+     */
+    private void deactivateIntake() {
+        // Stop intake mechanism.
+        intake.setPower(0);
+
+        // Set hopper up.
+        hopper.setPosition(hopperOutputAngle);
+    }
+
+    /**
      * Shoot all 3 powershots.
      */
     private void shootPowershots() {
-        // Set hopper indexer positions.
         for (int i = 0; i < 3; i++) {
             // Shoot a ring.
             shoot();
@@ -342,47 +386,22 @@ public class MainOpMode extends LinearOpMode {
     }
 
     /**
+     * Shoot all 3 high goals..
+     */
+    private void shootHighGoals() {
+        for (int i = 0; i < 3; i++) {
+            // Shoot a ring.
+            shoot();
+        }
+    }
+
+    /**
      * Shoot a ring from the robot.
      */
     private void shoot() {
         // TODO Test how long servo takes at the Makerspace.
         indexer.setPosition(indexerUpPosition);
         indexer.setPosition(indexerDownPosition);
-    }
-
-    /**
-     * Intake 3 rings.
-     */
-    private void intake() {
-        // TODO Hopper up position = 0.29
-        // TODO Hopper down position = 0.1
-        // TODO Sort out entire intake and high goal code,
-        // TODO Set hopper down when intaking
-
-        // Set hopper down.
-        hopper.setPosition(hopperInputAngle);
-
-        // Run intake mechanism.
-
-
-        // Set hopper up.
-        hopper.setPosition(hopperOutputAngle);
-    }
-
-    /**
-     * Ready shooter motors.
-     */
-    private void activateShooters() {
-        shooter1.setPower(shooterPowerSettingLow);
-        shooter2.setPower(shooterPowerSettingLow);
-    }
-
-    /**
-     * Turn off shooter motors.
-     */
-    private void deactivateShooters() {
-        shooter1.setPower(0);
-        shooter2.setPower(0);
     }
 
     /**
@@ -402,6 +421,22 @@ public class MainOpMode extends LinearOpMode {
         elbow.setPosition(elbowForwardPosition);
         jaw.setPosition(jawClosePosition);
         elbow.setPosition(elbowBackwardPosition);
+    }
+
+    /**
+     * Ready shooter motors.
+     */
+    private void activateShooters() {
+        shooter1.setPower(shooterPowerSettingLow);
+        shooter2.setPower(shooterPowerSettingLow);
+    }
+
+    /**
+     * Turn off shooter motors.
+     */
+    private void deactivateShooters() {
+        shooter1.setPower(0);
+        shooter2.setPower(0);
     }
 
     /**
