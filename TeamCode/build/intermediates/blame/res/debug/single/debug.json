@@ -1,10 +1,10 @@
 [
     {
-        "merged": "/home/james/StudioProjects/road-runner-quickstart/TeamCode/build/intermediates/res/merged/debug/raw_readme.md.flat",
-        "source": "/home/james/StudioProjects/road-runner-quickstart/TeamCode/src/main/res/raw/readme.md"
+        "merged": "/Users/cyberlives/Documents/Coding/FTC_2020-2021/TeamCode/build/intermediates/res/merged/debug/raw_readme.md.flat",
+        "source": "/Users/cyberlives/Documents/Coding/FTC_2020-2021/TeamCode/src/main/res/raw/readme.md"
     },
     {
-        "merged": "/home/james/StudioProjects/road-runner-quickstart/TeamCode/build/intermediates/res/merged/debug/xml_teamwebcamcalibrations.xml.flat",
-        "source": "/home/james/StudioProjects/road-runner-quickstart/TeamCode/src/main/res/xml/teamwebcamcalibrations.xml"
+        "merged": "/Users/cyberlives/Documents/Coding/FTC_2020-2021/TeamCode/build/intermediates/res/merged/debug/xml_teamwebcamcalibrations.xml.flat",
+        "source": "/Users/cyberlives/Documents/Coding/FTC_2020-2021/TeamCode/src/main/res/xml/teamwebcamcalibrations.xml"
     }
 ]

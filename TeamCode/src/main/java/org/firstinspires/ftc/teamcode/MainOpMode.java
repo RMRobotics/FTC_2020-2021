@@ -8,7 +8,9 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaCurrentGame;
+import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TfodCurrentGame;
 import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
@@ -34,7 +36,7 @@ public class MainOpMode extends LinearOpMode {
     private Servo hopper;
     private Servo indexer;
     private Servo elbow;
-    private Servo jaw;
+    //private Servo jaw;
 
     Recognition recognition;
     double wobbleGoalZone;
@@ -81,7 +83,24 @@ public class MainOpMode extends LinearOpMode {
         br                  = hardwareMap.get(DcMotor.class, "br");
         indexer             = hardwareMap.get(Servo.class, "indexer");
         elbow               = hardwareMap.get(Servo.class, "elbow");
-        jaw                 = hardwareMap.get(Servo.class, "jaw");
+        //jaw                 = hardwareMap.get(Servo.class, "jaw");
+
+        // Initialize vuforia engine.
+        vuforiaUltimateGoal.initialize(
+                "",
+                hardwareMap.get(WebcamName.class, "Frontcam"), // cameraName
+                "",
+                false,
+                false,
+                VuforiaLocalizer.Parameters.CameraMonitorFeedback.AXES, // cameraMonitorFeedback
+                1, // dx
+                5, // dy
+                0, // dz
+                0, // xAngle
+                0, // yAngle
+                0, // zAngle
+                true
+        );
 
         // Initialize TensorFlow engine.
         tfodUltimateGoal.initialize(
@@ -410,7 +429,7 @@ public class MainOpMode extends LinearOpMode {
     private void dropWobbleGoal() {
         // TODO Open elbow before parking.
         elbow.setPosition(elbowForwardPosition);
-        jaw.setPosition(jawOpenPosition);
+        //jaw.setPosition(jawOpenPosition);
     }
 
     /**
@@ -419,7 +438,7 @@ public class MainOpMode extends LinearOpMode {
     private void obtainWobbleGoal() {
         // TODO Close elbow before shooting.
         elbow.setPosition(elbowForwardPosition);
-        jaw.setPosition(jawClosePosition);
+        //jaw.setPosition(jawClosePosition);
         elbow.setPosition(elbowBackwardPosition);
     }
 
