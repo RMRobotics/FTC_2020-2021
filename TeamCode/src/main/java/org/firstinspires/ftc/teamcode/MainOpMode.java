@@ -85,44 +85,6 @@ public class MainOpMode extends LinearOpMode {
         elbow               = hardwareMap.get(Servo.class, "elbow");
         //jaw                 = hardwareMap.get(Servo.class, "jaw");
 
-        // Initialize vuforia engine.
-        vuforiaUltimateGoal.initialize(
-                "",
-                hardwareMap.get(WebcamName.class, "Frontcam"), // cameraName
-                "",
-                false,
-                false,
-                VuforiaLocalizer.Parameters.CameraMonitorFeedback.AXES, // cameraMonitorFeedback
-                1, // dx
-                5, // dy
-                0, // dz
-                0, // xAngle
-                0, // yAngle
-                0, // zAngle
-                true
-        );
-
-        // Initialize TensorFlow engine.
-        tfodUltimateGoal.initialize(
-                vuforiaUltimateGoal,
-                0.7F, // Set minimum confidence threshold to 0.7.
-                true,
-                true
-        );
-
-        // Activate and configure TensorFlow recognition engine.
-        tfodUltimateGoal.activate();
-        tfodUltimateGoal.setZoom(2.5, 16 / 9.0);
-
-        // Update telemetry.
-        telemetry.addData(">", "Press Play to start");
-        telemetry.update();
-
-        // Configure all devices before operation.
-        hopper.setPosition(0.29);
-        shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
         // Configure all variables before operation.
         shooterPowerSettingHigh = 0.9;
         shooterPowerSettingLow  = 0.6;
@@ -145,58 +107,102 @@ public class MainOpMode extends LinearOpMode {
         shootingTimeMiddleZone2     = 0;
         shootingTimeCloseZone       = 0;
 
+        // Configure all devices before operation.
+        hopper.setPosition(0.29);
+        shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        // Initialize vuforia engine.
+        vuforiaUltimateGoal.initialize(
+                "",
+                hardwareMap.get(WebcamName.class, "Frontcam"), // cameraName
+                "",
+                false,
+                false,
+                VuforiaLocalizer.Parameters.CameraMonitorFeedback.AXES, // cameraMonitorFeedback
+                1, // dx
+                5, // dy
+                0, // dz
+                0, // xAngle
+                0, // yAngle
+                0, // zAngle
+                true
+        );
+
+        // Initialize TensorFlow engine.
+        tfodUltimateGoal.initialize(
+                vuforiaUltimateGoal,
+                0.8F, // Set minimum confidence threshold to 0.7.
+                true,
+                true
+        );
+
+        // Activate and configure TensorFlow recognition engine.
+        tfodUltimateGoal.activate();
+        tfodUltimateGoal.setZoom(2.5, 16 / 9.0);
+
+        // Update telemetry.
+        telemetry.addData(">", "Press Play to start");
+        telemetry.update();
+
         // Wait for start command from Driver Station.
         waitForStart();
 
         // Run operation.
-        if (opModeIsActive()) {
-            while (opModeIsActive()) {
-                // Get recognitions from TensorFlow engine.
-                recognitions = tfodUltimateGoal.getRecognitions();
+        while (opModeIsActive()) {
+            // Debug.
+            telemetry.addData("asdf", "asdf");
+            telemetry.update();
 
-                // Inform user if there are no recognitions.
-                if (recognitions.size() == 0) {
-                    telemetry.addData("TFOD", "No items detected.");
-                    telemetry.addData("TargetZone", "A");
-                    wobbleGoalZone = 1;
+            // Get recognitions from TensorFlow engine.
+            recognitions = tfodUltimateGoal.getRecognitions();
+            tfodUltimateGoal.close();
+
+            // If there are recognitions.
+            if (recognitions.size() != 0) {
+                // Initialize index variable.
+                index = 0;
+
+                // Iterate through recognitions.
+                for (Recognition recognition : recognitions) {
+                    // Define recognition.
+                    this.recognition = recognition;
+
+                    // Display info regarding recognition.
+                    displayInfo(index);
+
+                    // Increment index.
+                    index++;
                 }
 
-                // Otherwise, display info for each recognition.
-                else {
-                    // Initialize index variable.
-                    index = 0;
+                // Update telemetry.
+                telemetry.update();
 
-                    // Iterate through recognitions.
-                    for (Recognition recognition : recognitions) {
-                        // Define recognition.
-                        this.recognition = recognition;
-
-                        // Display info regarding recognition.
-                        displayInfo(index);
-
-                        // Increment index.
-                        index++;
-                    }
-
-                    // Update telemetry.
-                    telemetry.update();
-
-                    // Determine trajectory.
-                    if (wobbleGoalZone == 2) {
-                        middleZone();
-                    } else if (wobbleGoalZone == 3) {
-                        farZone();
-                    } else {
-                        closeZone();
-                    }
-
-                    // Stop if requested.
-                    if (isStopRequested()) return;
-
-                    // Follow trajectory.
-                    drive.followTrajectory(trajectory);
+                // Determine trajectory.
+                if (wobbleGoalZone == 2) {
+                    telemetry.addData("TargetZone", "B");
+                    middleZone();
+                } else if (wobbleGoalZone == 3) {
+                    telemetry.addData("TargetZone", "A");
+                    farZone();
+                } else {
+                    telemetry.addData("TargetZone", "C");
+                    closeZone();
                 }
             }
+
+            // If there are no recognitions.
+            else {
+                telemetry.addData("TFOD", "No items detected.");
+                telemetry.addData("TargetZone", "C");
+                wobbleGoalZone = 1;
+            }
+
+            // Stop if requested.
+            if (isStopRequested()) return;
+
+            // Follow trajectory.
+            drive.followTrajectory(trajectory);
         }
     }
 

@@ -15,7 +15,7 @@ public class MecanumOpMode extends LinearOpMode {
     Servo hopperServo;
 
     Servo elbow;
-    CRServo jaw;
+    //Servo jaw;
 
     DcMotor flMotor;
     DcMotor frMotor;
@@ -48,7 +48,7 @@ public class MecanumOpMode extends LinearOpMode {
 
         //mapping servos
         elbow       = hardwareMap.servo.get("elbow");
-        jaw         = hardwareMap.crservo.get("jaw");
+        //jaw         = hardwareMap.servo.get("jaw");
         hopperServo = hardwareMap.servo.get("hopperangle");
         indexer     = hardwareMap.servo.get("indexer");
 
@@ -95,7 +95,7 @@ public class MecanumOpMode extends LinearOpMode {
             }
             else if (gamepad1.left_bumper)
             {
-                indexerAngle = 70;
+                indexerAngle = 30;
             }
 
             flMotor.setDirection(DcMotor.Direction.REVERSE);
@@ -178,7 +178,7 @@ public class MecanumOpMode extends LinearOpMode {
 
             hopperServo.setPosition(hopperAngle);
             elbow.setPosition(elbowAngle);
-            jaw.setPower(jawPower);
+            //jaw.setPower(jawPower);
             telemetry.addData("pressing x: ", "value: " + gamepad2.x);
             telemetry.addData( "pressing y", "value: " + gamepad2.y);
             telemetry.addData("Motors", "Y Power " + gamepad1.left_stick_y);
@@ -186,6 +186,4 @@ public class MecanumOpMode extends LinearOpMode {
             telemetry.update();
         }
     }
-
-
 }
