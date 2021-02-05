@@ -158,8 +158,15 @@ public class MainOpMode extends LinearOpMode {
             recognitions = tfodUltimateGoal.getRecognitions();
             tfodUltimateGoal.close();
 
+            // If there are no recognitions.
+            if (recognitions.size() == 0) {
+                telemetry.addData("TFOD", "No items detected.");
+                telemetry.addData("TargetZone", "A");
+                wobbleGoalZone = 1;
+            }
+
             // If there are recognitions.
-            if (recognitions.size() != 0) {
+            else {
                 // Initialize index variable.
                 index = 0;
 
@@ -174,28 +181,18 @@ public class MainOpMode extends LinearOpMode {
                     // Increment index.
                     index++;
                 }
-
-                // Update telemetry.
-                telemetry.update();
-
-                // Determine trajectory.
-                if (wobbleGoalZone == 2) {
-                    telemetry.addData("TargetZone", "B");
-                    middleZone();
-                } else if (wobbleGoalZone == 3) {
-                    telemetry.addData("TargetZone", "A");
-                    farZone();
-                } else {
-                    telemetry.addData("TargetZone", "C");
-                    closeZone();
-                }
             }
 
-            // If there are no recognitions.
-            else {
-                telemetry.addData("TFOD", "No items detected.");
+            // Determine trajectory.
+            if (wobbleGoalZone == 2) {
+                telemetry.addData("TargetZone", "B");
+                middleZone();
+            } else if (wobbleGoalZone == 3) {
+                telemetry.addData("TargetZone", "A");
+                farZone();
+            } else if (wobbleGoalZone == 1){
                 telemetry.addData("TargetZone", "C");
-                wobbleGoalZone = 1;
+                closeZone();
             }
 
             // Stop if requested.
@@ -472,14 +469,14 @@ public class MainOpMode extends LinearOpMode {
         telemetry.addData("label " + i, recognition.getLabel());
 
         // Display upper corner info.
-        telemetry.addData("Left, Top" + i,
+        telemetry.addData("Left, Top " + i,
                 recognition.getLeft() + recognition.getTop());
 
         // Display lower corner info.
-        telemetry.addData("Right, Bottom" + i,
+        telemetry.addData("Right, Bottom " + i,
                 recognition.getRight() + recognition.getBottom());
 
-        // Display Target Zone
+        // Determine Target Zone.
         if (recognition.getLabel().equals("Single")) {
             telemetry.addData("TargetZone", "B");
             wobbleGoalZone = 2;
@@ -489,5 +486,8 @@ public class MainOpMode extends LinearOpMode {
         } else {
             telemetry.addData("TargetZone", "UNKNOWN");
         }
+
+        // Update telemetry.
+        telemetry.update();
     }
 }
