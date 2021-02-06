@@ -33,6 +33,7 @@ public class MainOpMode extends LinearOpMode {
     private DcMotor fr;
     private DcMotor br;
 
+    private Servo cameraServo;
     private Servo hopper;
     private Servo indexer;
     private Servo elbow;
@@ -73,7 +74,6 @@ public class MainOpMode extends LinearOpMode {
         vuforiaUltimateGoal = new VuforiaCurrentGame();
         drive               = new SampleMecanumDrive(hardwareMap);
         tfodUltimateGoal    = new TfodCurrentGame();
-        hopper              = hardwareMap.get(Servo.class, "hopperangle");
         shooter1            = hardwareMap.get(DcMotor.class, "shooter1");
         shooter2            = hardwareMap.get(DcMotor.class, "shooter2");
         intake              = hardwareMap.get(DcMotor.class, "intake");
@@ -81,6 +81,8 @@ public class MainOpMode extends LinearOpMode {
         bl                  = hardwareMap.get(DcMotor.class, "bl");
         fr                  = hardwareMap.get(DcMotor.class, "fr");
         br                  = hardwareMap.get(DcMotor.class, "br");
+        cameraServo         = hardwareMap.get(Servo.class, "cameraServo");
+        hopper              = hardwareMap.get(Servo.class, "hopper");
         indexer             = hardwareMap.get(Servo.class, "indexer");
         elbow               = hardwareMap.get(Servo.class, "elbow");
         //jaw                 = hardwareMap.get(Servo.class, "jaw");
@@ -90,8 +92,8 @@ public class MainOpMode extends LinearOpMode {
         shooterPowerSettingLow  = 0.6;
         intakePowerSetting      = 1;
         intakeDistance          = 0;    // TODO fix with robot, currently set to 0.
-        indexerUpPosition       = 70;  // TODO fix wth robot.
-        indexerDownPosition     = 0;  // TODO fix wth robot.
+        indexerUpPosition       = 70;   // TODO fix wth robot.
+        indexerDownPosition     = 0;    // TODO fix wth robot.
         elbowForwardPosition    = 0.7;
         elbowBackwardPosition   = 0.28;
         hopperInputAngle        = 0.1;  // TODO Hopper up position = 0.29
@@ -150,10 +152,6 @@ public class MainOpMode extends LinearOpMode {
 
         // Run operation.
         while (opModeIsActive()) {
-            // Debug.
-            telemetry.addData("asdf", "asdf");
-            telemetry.update();
-
             // Get recognitions from TensorFlow engine.
             recognitions = tfodUltimateGoal.getRecognitions();
             tfodUltimateGoal.close();
