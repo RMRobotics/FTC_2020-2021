@@ -49,7 +49,7 @@ public class MecanumOpMode extends LinearOpMode {
         //mapping servos
         elbow       = hardwareMap.servo.get("elbow");
         //jaw         = hardwareMap.servo.get("jaw");
-        hopperServo = hardwareMap.servo.get("hopperangle");
+        hopperServo = hardwareMap.servo.get("hopper");
         indexer     = hardwareMap.servo.get("indexer");
 
         //initializing default servo value
