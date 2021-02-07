@@ -15,7 +15,7 @@ public class MecanumOpMode extends LinearOpMode {
     Servo hopperServo;
 
     Servo elbow;
-    //Servo jaw;
+    Servo jaw;
 
     DcMotor flMotor;
     DcMotor frMotor;
@@ -48,7 +48,7 @@ public class MecanumOpMode extends LinearOpMode {
 
         //mapping servos
         elbow       = hardwareMap.servo.get("elbow");
-        //jaw         = hardwareMap.servo.get("jaw");
+        jaw         = hardwareMap.servo.get("jaw");
         hopperServo = hardwareMap.servo.get("hopper");
         indexer     = hardwareMap.servo.get("indexer");
 
@@ -58,7 +58,7 @@ public class MecanumOpMode extends LinearOpMode {
         double hopperAngle = hopperInputAngle;
         double elbowAngle = 0;
         double jawPower;
-        double indexerAngle = 0;
+        double indexerPosition = 0;
 
         //setting shooters to use encoders
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -78,9 +78,13 @@ public class MecanumOpMode extends LinearOpMode {
             boolean rightTriggerOnePressed = gamepad1.right_trigger < .1;
             boolean leftTriggerOnePressed = gamepad1.left_trigger > .1;
 
+            // TODO When press right trigger, shoot 3.
+            // TODO Make indexer travel less.
+            // TODO Fix the indexer position
+
             if(gamepad1.left_trigger > .2){
                 hopperAngle = hopperInputAngle;
-                indexerAngle = 0;
+                indexerPosition = 0;
             }
 
             if(gamepad2IsDominant)
@@ -91,11 +95,11 @@ public class MecanumOpMode extends LinearOpMode {
 
             if (gamepad1.right_bumper)
             {
-                indexerAngle = 0;
+                indexerPosition = 126 / 180.0;
             }
             else if (gamepad1.left_bumper)
             {
-                indexerAngle = 30;
+                indexerPosition = 0;
             }
 
             flMotor.setDirection(DcMotor.Direction.REVERSE);
@@ -108,7 +112,7 @@ public class MecanumOpMode extends LinearOpMode {
 
             if (gamepad1.x) {
                 hopperAngle = hopperInputAngle;
-                indexerAngle = 0;
+                indexerPosition = 0;
             }
             else if (gamepad1.y) hopperAngle= hopperOutputAngle;
 
@@ -167,7 +171,7 @@ public class MecanumOpMode extends LinearOpMode {
 
 
 
-            indexer.setPosition(indexerAngle);
+            indexer.setPosition(indexerPosition);
 
             shooter1.setPower(shooterPower);
             shooter2.setPower(shooterPower);
@@ -178,7 +182,7 @@ public class MecanumOpMode extends LinearOpMode {
 
             hopperServo.setPosition(hopperAngle);
             elbow.setPosition(elbowAngle);
-            //jaw.setPower(jawPower);
+            jaw.setPosition(jawPower);
             telemetry.addData("pressing x: ", "value: " + gamepad2.x);
             telemetry.addData( "pressing y", "value: " + gamepad2.y);
             telemetry.addData("Motors", "Y Power " + gamepad1.left_stick_y);

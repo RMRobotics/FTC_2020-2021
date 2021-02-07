@@ -37,7 +37,7 @@ public class MainOpMode extends LinearOpMode {
     private Servo hopper;
     private Servo indexer;
     private Servo elbow;
-    //private Servo jaw;
+    private Servo jaw;
 
     Recognition recognition;
     double wobbleGoalZone;
@@ -85,14 +85,14 @@ public class MainOpMode extends LinearOpMode {
         hopper              = hardwareMap.get(Servo.class, "hopper");
         indexer             = hardwareMap.get(Servo.class, "indexer");
         elbow               = hardwareMap.get(Servo.class, "elbow");
-        //jaw                 = hardwareMap.get(Servo.class, "jaw");
+        jaw                 = hardwareMap.get(Servo.class, "jaw");
 
         // Configure all variables before operation.
         shooterPowerSettingHigh = 0.9;
         shooterPowerSettingLow  = 0.6;
         intakePowerSetting      = 1;
         intakeDistance          = 0;    // TODO fix with robot, currently set to 0.
-        indexerUpPosition       = 70;   // TODO fix wth robot.
+        indexerUpPosition       = 0.7;  // TODO fix wth robot.
         indexerDownPosition     = 0;    // TODO fix wth robot.
         elbowForwardPosition    = 0.7;
         elbowBackwardPosition   = 0.28;
@@ -430,7 +430,7 @@ public class MainOpMode extends LinearOpMode {
     private void dropWobbleGoal() {
         // TODO Open elbow before parking.
         elbow.setPosition(elbowForwardPosition);
-        //jaw.setPosition(jawOpenPosition);
+        jaw.setPosition(jawOpenPosition);
     }
 
     /**
@@ -439,7 +439,7 @@ public class MainOpMode extends LinearOpMode {
     private void obtainWobbleGoal() {
         // TODO Close elbow before shooting.
         elbow.setPosition(elbowForwardPosition);
-        //jaw.setPosition(jawClosePosition);
+        jaw.setPosition(jawClosePosition);
         elbow.setPosition(elbowBackwardPosition);
     }
 
