@@ -14,8 +14,8 @@ public class MecanumOpMode extends LinearOpMode {
     DcMotor transfer;
     Servo hopperServo;
 
-    Servo elbow;
     Servo jaw;
+    Servo elbow;
 
     DcMotor flMotor;
     DcMotor frMotor;
@@ -47,8 +47,8 @@ public class MecanumOpMode extends LinearOpMode {
         brMotor     = hardwareMap.dcMotor.get("br");
 
         //mapping servos
-        elbow       = hardwareMap.servo.get("elbow");
         jaw         = hardwareMap.servo.get("jaw");
+        elbow       = hardwareMap.servo.get("elbow");
         hopperServo = hardwareMap.servo.get("hopper");
         indexer     = hardwareMap.servo.get("indexer");
 
@@ -57,7 +57,7 @@ public class MecanumOpMode extends LinearOpMode {
         double hopperOutputAngle = .29;
         double hopperAngle = hopperInputAngle;
         double elbowAngle = 0;
-        double jawPower;
+        double jawPosition = 0;
         double indexerPosition = 0;
 
         //setting shooters to use encoders
@@ -66,10 +66,8 @@ public class MecanumOpMode extends LinearOpMode {
 
         waitForStart();
 
-        while(opModeIsActive())
+        while (opModeIsActive())
         {
-            jawPower = 0;
-            //
             double intakePower      = gamepad1.left_trigger;
             double shooterPower     = -gamepad1.right_trigger;
             double transferPower    = gamepad1.left_trigger;
@@ -82,22 +80,22 @@ public class MecanumOpMode extends LinearOpMode {
             // TODO Make indexer travel less.
             // TODO Fix the indexer position
 
-            if(gamepad1.left_trigger > .2){
+            if (gamepad1.left_trigger > .2){
                 hopperAngle = hopperInputAngle;
                 indexerPosition = 0;
             }
 
-            if(gamepad2IsDominant)
+            if (gamepad2IsDominant)
             {
                 transferPower = -gamepad2.right_trigger;
                 intakePower = -gamepad2.right_trigger;
             }
 
-            if (gamepad1.right_bumper)
+            if (gamepad2.right_bumper)
             {
-                indexerPosition = 126 / 180.0;
+                indexerPosition = 0.3;
             }
-            else if (gamepad1.left_bumper)
+            else if (gamepad2.left_bumper)
             {
                 indexerPosition = 0;
             }
@@ -114,13 +112,13 @@ public class MecanumOpMode extends LinearOpMode {
                 hopperAngle = hopperInputAngle;
                 indexerPosition = 0;
             }
-            else if (gamepad1.y) hopperAngle= hopperOutputAngle;
+            else if (gamepad1.y) hopperAngle = hopperOutputAngle;
 
-            if ( gamepad2.a)  elbowAngle = 0.28;
-            else if ( gamepad2.b) elbowAngle = 0.70;
+            if (gamepad2.a)  elbowAngle = 0.28; // Down
+            else if (gamepad2.b) elbowAngle = 0.70; // Up
 
-            if (gamepad2.x) jawPower = .5;
-            else if ( gamepad2.y) jawPower = -.5;
+            if (gamepad2.x) jawPosition = 0.36; // Close
+            else if (gamepad2.y) jawPosition = 0.1; // Open
 
             double[] speeds = {
                     (drive + strafe +twist),
@@ -136,27 +134,27 @@ public class MecanumOpMode extends LinearOpMode {
 
             if (max > 1 )
             {
-                for ( int i = 0; i < speeds.length; i++ ) speeds[i] /= max;
+                for (int i = 0; i < speeds.length; i++) speeds[i] /= max;
             }
-            if(gamepad2.dpad_up || gamepad1.dpad_up) {
+            if (gamepad2.dpad_up || gamepad1.dpad_up) {
                 flMotor.setPower(-.25);
                 frMotor.setPower(-.25);
                 brMotor.setPower(-.25);
                 blMotor.setPower(-.25);
             }
-            else if(gamepad2.dpad_right || gamepad1.dpad_right){
+            else if (gamepad2.dpad_right || gamepad1.dpad_right){
                 flMotor.setPower(-.25);
                 frMotor.setPower(.25);
                 brMotor.setPower(.25);
                 blMotor.setPower(-.25);
             }
-            else if(gamepad2.dpad_left || gamepad1.dpad_left){
+            else if (gamepad2.dpad_left || gamepad1.dpad_left){
                 flMotor.setPower(.25);
                 frMotor.setPower(-.25);
                 brMotor.setPower(-.25);
                 blMotor.setPower(.25);
             }
-            else if(gamepad2.dpad_down || gamepad1.dpad_down){
+            else if (gamepad2.dpad_down || gamepad1.dpad_down){
                 flMotor.setPower(.25);
                 frMotor.setPower(.25);
                 brMotor.setPower(.25);
@@ -182,7 +180,8 @@ public class MecanumOpMode extends LinearOpMode {
 
             hopperServo.setPosition(hopperAngle);
             elbow.setPosition(elbowAngle);
-            jaw.setPosition(jawPower);
+            jaw.setPosition(jawPosition);
+
             telemetry.addData("pressing x: ", "value: " + gamepad2.x);
             telemetry.addData( "pressing y", "value: " + gamepad2.y);
             telemetry.addData("Motors", "Y Power " + gamepad1.left_stick_y);

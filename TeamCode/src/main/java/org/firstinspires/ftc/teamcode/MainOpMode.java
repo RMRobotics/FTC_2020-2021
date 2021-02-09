@@ -33,28 +33,33 @@ public class MainOpMode extends LinearOpMode {
     private DcMotor fr;
     private DcMotor br;
 
+    private Servo jaw;
     private Servo cameraServo;
     private Servo hopper;
     private Servo indexer;
     private Servo elbow;
-    private Servo jaw;
 
     Recognition recognition;
     double wobbleGoalZone;
+
     double shooterPowerSettingLow;
     double shooterPowerSettingHigh;
     double intakePowerSetting;
-    double intakeDistance;
+
     double indexerUpPosition;
     double indexerDownPosition;
-    double elbowForwardPosition;
-    double elbowBackwardPosition;
+    double elbowClosePosition;
+    double elbowOpenPosition;
     double hopperInputAngle;
     double hopperOutputAngle;
     double jawOpenPosition;
     double jawClosePosition;
-    double powershotAngle;
 
+    double intakeDistance;
+    double powershotAngle;
+    double openIntakePosition;
+
+    double timeForShooting;
     double shootingTimeFarZone1;
     double shootingTimeFarZone2;
     double shootingTimeMiddleZone1;
@@ -81,36 +86,40 @@ public class MainOpMode extends LinearOpMode {
         bl                  = hardwareMap.get(DcMotor.class, "bl");
         fr                  = hardwareMap.get(DcMotor.class, "fr");
         br                  = hardwareMap.get(DcMotor.class, "br");
+        jaw                 = hardwareMap.get(Servo.class, "jaw");
         cameraServo         = hardwareMap.get(Servo.class, "cameraServo");
         hopper              = hardwareMap.get(Servo.class, "hopper");
         indexer             = hardwareMap.get(Servo.class, "indexer");
         elbow               = hardwareMap.get(Servo.class, "elbow");
-        jaw                 = hardwareMap.get(Servo.class, "jaw");
 
         // Configure all variables before operation.
-        shooterPowerSettingHigh = 0.9;
-        shooterPowerSettingLow  = 0.6;
-        intakePowerSetting      = 1;
-        intakeDistance          = 0;    // TODO fix with robot, currently set to 0.
-        indexerUpPosition       = 0.7;  // TODO fix wth robot.
-        indexerDownPosition     = 0;    // TODO fix wth robot.
-        elbowForwardPosition    = 0.7;
-        elbowBackwardPosition   = 0.28;
-        hopperInputAngle        = 0.1;  // TODO Hopper up position = 0.29
-        hopperOutputAngle       = 0.29; // TODO Hopper down position = 0.1
-        jawOpenPosition         = 0;    // TODO set position for jaw, also needs tele-op.
-        jawClosePosition        = 0;    // TODO set position for jaw, also needs tele-op.
-        powershotAngle          = 5;    // TODO test at Makerspace.
+        shooterPowerSettingHigh     = 0.9;
+        shooterPowerSettingLow      = 0.6;
+        intakePowerSetting          = 1;
 
-        // Configure duration settings before operation.
-        shootingTimeFarZone1        = 1;    // TODO Test with robot, also estimate.
-        shootingTimeFarZone2        = 0;    // TODO Use road runner GUI.
+        indexerUpPosition           = 0.3;      // TODO fix wth robot.
+        indexerDownPosition         = 0;        // TODO fix wth robot.
+        elbowClosePosition          = 0.7;
+        elbowOpenPosition           = 0.28;
+        hopperInputAngle            = 0.1;      // TODO Hopper up position = 0.29
+        hopperOutputAngle           = 0.29;     // TODO Hopper down position = 0.1
+        jawOpenPosition             = 0.1;      // TODO set position for jaw, also needs tele-op.
+        jawClosePosition            = 0.36;     // TODO set position for jaw, also needs tele-
+
+        intakeDistance              = 0;        // TODO fix with robot, currently set to 0.
+        powershotAngle              = 5;        // TODO test at Makerspace.
+        openIntakePosition          = 0.11;
+
+        timeForShooting             = 5;
+        shootingTimeFarZone1        = 1;        // TODO Test with robot, also estimate.
+        shootingTimeFarZone2        = 0;        // TODO Use road runner GUI.
         shootingTimeMiddleZone1     = 0;
         shootingTimeMiddleZone2     = 0;
         shootingTimeCloseZone       = 0;
 
         // Configure all devices before operation.
-        hopper.setPosition(0.29);
+        //hopper.setPosition(0.29);
+        cameraServo.setPosition(0.17);
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
@@ -134,7 +143,7 @@ public class MainOpMode extends LinearOpMode {
         // Initialize TensorFlow engine.
         tfodUltimateGoal.initialize(
                 vuforiaUltimateGoal,
-                0.8F, // Set minimum confidence threshold to 0.7.
+                0.7F, // Set minimum confidence threshold to 0.7.
                 true,
                 true
         );
@@ -152,6 +161,8 @@ public class MainOpMode extends LinearOpMode {
 
         // Run operation.
         while (opModeIsActive()) {
+            // TODO Turn camera servo 30° to the right.
+
             // Get recognitions from TensorFlow engine.
             recognitions = tfodUltimateGoal.getRecognitions();
             tfodUltimateGoal.close();
@@ -283,7 +294,10 @@ public class MainOpMode extends LinearOpMode {
                 })
 
                 // 3) Spline to 1st drop-off point at middle zone.
-                .splineTo(new Vector2d(15, -36), Math.toRadians(0))
+                .splineToSplineHeading(
+                        new Pose2d(15, -33, Math.toRadians(0)),
+                        Math.toRadians(90)
+                )
 
                 // Drop the first wobble goal.
                 .addDisplacementMarker(this::dropWobbleGoal)
@@ -315,7 +329,7 @@ public class MainOpMode extends LinearOpMode {
                 })
 
                 // 7) Spline to 2nd drop-off point at middle zone.
-                .splineTo(new Vector2d(15, -46.5), Math.toRadians(0))
+                .splineTo(new Vector2d(15, -43.5), Math.toRadians(0))
 
                 // Drop the second wobble goal and park.
                 .addDisplacementMarker(this::dropWobbleGoal)
@@ -333,32 +347,35 @@ public class MainOpMode extends LinearOpMode {
                 // 2) Spline to powershot position.
                 .splineTo(new Vector2d(-1, -50), Math.toRadians(30))
 
-                // Ready shooter motors.
+                /*// Ready shooter motors.
                 .addTemporalMarker(shootingTimeCloseZone, this::activateShooters)
 
                 // Shoot 3 powershots.
                 .addDisplacementMarker(() -> {
                     shootPowershots();
                     deactivateShooters();
-                })
+                })*/
 
-                // 3) Spline to 1st drop-off point at close zone.
-                .splineTo(new Vector2d(11, -40), Math.toRadians(270))
+                // 3) Spline to 1st drop-off point at close zone at heading of 270°.
+                .splineToSplineHeading(
+                        new Pose2d(11, -40, Math.toRadians(270)),
+                        Math.toRadians(0) // Tangent
+                )
 
                 // Drop the first wobble goal.
-                .addDisplacementMarker(this::dropWobbleGoal)
+                //.addDisplacementMarker(this::dropWobbleGoal)
 
                 // 4) Spline to second wobble goal.
                 .splineTo(new Vector2d(-50, -15.5), Math.toRadians(270))
 
                 // Pick up the second wobble goal.
-                .addDisplacementMarker(this::obtainWobbleGoal)
+                //.addDisplacementMarker(this::obtainWobbleGoal)
 
                 // 5) Spline to 2nd drop-off point at close zone.
                 .splineTo(new Vector2d(-10, -60), Math.toRadians(0))
 
                 // Drop the second wobble goal.
-                .addDisplacementMarker(this::dropWobbleGoal)
+                //.addDisplacementMarker(this::dropWobbleGoal)
 
                 // 6) Spline to parking point.
                 .splineTo(new Vector2d(11, -30), Math.toRadians(0))
@@ -429,7 +446,7 @@ public class MainOpMode extends LinearOpMode {
      */
     private void dropWobbleGoal() {
         // TODO Open elbow before parking.
-        elbow.setPosition(elbowForwardPosition);
+        elbow.setPosition(elbowClosePosition);
         jaw.setPosition(jawOpenPosition);
     }
 
@@ -438,9 +455,9 @@ public class MainOpMode extends LinearOpMode {
      */
     private void obtainWobbleGoal() {
         // TODO Close elbow before shooting.
-        elbow.setPosition(elbowForwardPosition);
+        elbow.setPosition(elbowClosePosition);
         jaw.setPosition(jawClosePosition);
-        elbow.setPosition(elbowBackwardPosition);
+        elbow.setPosition(elbowOpenPosition);
     }
 
     /**
