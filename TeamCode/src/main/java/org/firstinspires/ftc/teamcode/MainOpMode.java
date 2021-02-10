@@ -48,8 +48,8 @@ public class MainOpMode extends LinearOpMode {
 
     double indexerUpPosition;
     double indexerDownPosition;
-    double elbowClosePosition;
-    double elbowOpenPosition;
+    double elbowDownPosition;
+    double elbowUpPosition;
     double hopperInputAngle;
     double hopperOutputAngle;
     double jawOpenPosition;
@@ -97,8 +97,8 @@ public class MainOpMode extends LinearOpMode {
 
         indexerUpPosition           = 0.3;      // TODO fix wth robot.
         indexerDownPosition         = 0;        // TODO fix wth robot.
-        elbowClosePosition          = 0.7;
-        elbowOpenPosition           = 0.28;
+        elbowDownPosition = 0.7;
+        elbowUpPosition = 0.28;
         hopperInputAngle            = 0.1;      // TODO Hopper up position = 0.29
         hopperOutputAngle           = 0.29;     // TODO Hopper down position = 0.1
         jawOpenPosition             = 0.1;      // TODO set position for jaw, also needs tele-op.
@@ -117,7 +117,9 @@ public class MainOpMode extends LinearOpMode {
 
         // Configure all devices before operation.
         hopper.setPosition(0.29);
-        cameraServo.setPosition(-0.17);
+        cameraServo.setPosition(0.17);
+        jaw.setPosition(jawClosePosition);
+        elbow.setPosition(elbowDownPosition);
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
@@ -158,12 +160,11 @@ public class MainOpMode extends LinearOpMode {
         waitForStart();
 
         // Run operation.
-        while (opModeIsActive()) {
+        if (opModeIsActive()) {
             // TODO Turn camera servo 30° to the right.
 
             // Get recognitions from TensorFlow engine.
             recognitions = tfodUltimateGoal.getRecognitions();
-            tfodUltimateGoal.close();
 
             // If there are no recognitions.
             if (recognitions.size() == 0) {
@@ -208,66 +209,67 @@ public class MainOpMode extends LinearOpMode {
             // Follow trajectory.
             drive.followTrajectory(trajectory);
         }
+
+        // Close tensorflow engine.
+        tfodUltimateGoal.close();
     }
 
     /**
-     * Goes to closest square if there are 0 rings.
+     * Goes to farthest square if there are 4 rings.
      */
-    private void farZone() {
+    private void closeZone() {
         // Build trajectory.
         trajectory = drive.trajectoryBuilder(new Pose2d(-62, -50)) // 1) Start.
                 // 2) Spline to powershot position.
                 .splineTo(new Vector2d(-1, -50), Math.toRadians(30))
 
                 // Ready shooter motors.
-                .addTemporalMarker(shooterPrepTime1, this::activateShooters)
+                //.addTemporalMarker(shooterPrepTime1, this::activateShooters)
+                .addDisplacementMarker(() -> {
+                    /*telemetry.addData("Debug", "asdf");
+                    telemetry.update();*/
+                })
 
                 // Shoot 3 powershots.
                 .addDisplacementMarker(() -> {
-                    shootPowershots();
-                    deactivateShooters();
+                    /*shootPowershots();
+                    telemetry.addData("Debug", "hjkl");
+                    telemetry.update();
+                    deactivateShooters();*/
                 })
 
-                // 3) Spline to 1st drop-off point at far zone.
-                .splineTo(new Vector2d(40, -60), Math.toRadians(0))
+                // 3) Spline to 1st drop-off point at close zone at heading of 270°.
+                .splineToSplineHeading(
+                        new Pose2d(11, -40, Math.toRadians(270)),
+                        Math.toRadians(0) // Tangent
+                )
 
                 // Drop the first wobble goal.
                 .addDisplacementMarker(this::dropWobbleGoal)
 
                 // 4) Spline to second wobble goal.
-                .splineTo(new Vector2d(-50, -15.5), Math.toRadians(270))
+                .splineToLinearHeading(
+                        new Pose2d(-88, -5.5, Math.toRadians(270)),
+                        Math.toRadians(270)
+                )
 
                 // Pick up the second wobble goal.
                 .addDisplacementMarker(this::obtainWobbleGoal)
 
-                // 5) Spline to starter stack.
-                .splineTo(new Vector2d(-28.5, -36.5), Math.toRadians(0))
-
-                // Run intake mechanism to collect 3 rings.
-                .addDisplacementMarker(this::activateIntake)
-                .forward(intakeDistance)
-                .addDisplacementMarker(this::deactivateIntake)
-
-                // 6) Spline to shooting point.
-                .splineTo(new Vector2d(-12, -36.5), Math.toRadians(0))
-
-                // Ready shooter motors.
-                .addTemporalMarker(shooterPrepTimeFarZone2, this::activateShooters)
-
-                // Shoot 3 rings into high goal.
-                .addDisplacementMarker(() -> {
-                    shootHighGoals();
-                    deactivateShooters();
-                })
-
-                // 7) Spline to 2nd drop-off point at far zone.
-                .splineTo(new Vector2d(59, -40), Math.toRadians(270))
+                /*// 5) Spline to 2nd drop-off point at close zone.
+                .splineTo(new Vector2d(-10, -60), Math.toRadians(0))
 
                 // Drop the second wobble goal.
                 .addDisplacementMarker(this::dropWobbleGoal)
 
-                // 8) Spline to parking point.
-                .splineTo(new Vector2d(11, -30), Math.toRadians(90))
+                // 6) Spline to parking point.
+                .splineTo(new Vector2d(11, -30), Math.toRadians(0))
+
+                // TODO Remove after testing, will mess up auto path.
+                .splineToSplineHeading(
+                        new Pose2d(-62, -50, Math.toRadians(0)),
+                        Math.toRadians(180)
+                )*/
 
                 // Return trajectory.
                 .build();
@@ -301,7 +303,10 @@ public class MainOpMode extends LinearOpMode {
                 .addDisplacementMarker(this::dropWobbleGoal)
 
                 // 4) Spline to second wobble goal.
-                .splineTo(new Vector2d(-50, -15.5), Math.toRadians(270))
+                .splineToLinearHeading(
+                        new Pose2d(-50, -15.5, Math.toRadians(270)),
+                        Math.toRadians(270)
+                )
 
                 // Pick up the second wobble goal.
                 .addDisplacementMarker(this::obtainWobbleGoal)
@@ -332,14 +337,21 @@ public class MainOpMode extends LinearOpMode {
                 // Drop the second wobble goal and park.
                 .addDisplacementMarker(this::dropWobbleGoal)
 
+
+                // TODO Remove after testing, will mess up auto path.
+                .splineToSplineHeading(
+                        new Pose2d(-62, -50, Math.toRadians(0)),
+                        Math.toRadians(180)
+                )
+
                 // Return trajectory.
                 .build();
     }
 
     /**
-     * Goes to farthest square if there are 4 rings.
+     * Goes to closest square if there are 0 rings.
      */
-    private void closeZone() {
+    private void farZone() {
         // Build trajectory.
         trajectory = drive.trajectoryBuilder(new Pose2d(-62, -50)) // 1) Start.
                 // 2) Spline to powershot position.
@@ -354,29 +366,55 @@ public class MainOpMode extends LinearOpMode {
                     deactivateShooters();
                 })
 
-                // 3) Spline to 1st drop-off point at close zone at heading of 270°.
-                .splineToSplineHeading(
-                        new Pose2d(11, -40, Math.toRadians(270)),
-                        Math.toRadians(0) // Tangent
-                )
+                // 3) Spline to 1st drop-off point at far zone.
+                .splineTo(new Vector2d(40, -60), Math.toRadians(0))
 
                 // Drop the first wobble goal.
                 .addDisplacementMarker(this::dropWobbleGoal)
 
                 // 4) Spline to second wobble goal.
-                .splineTo(new Vector2d(-50, -15.5), Math.toRadians(270))
+                .splineToLinearHeading(
+                        new Pose2d(-50, -15.5, Math.toRadians(270)),
+                        Math.toRadians(270)
+                )
 
                 // Pick up the second wobble goal.
                 .addDisplacementMarker(this::obtainWobbleGoal)
 
-                // 5) Spline to 2nd drop-off point at close zone.
-                .splineTo(new Vector2d(-10, -60), Math.toRadians(0))
+                // 5) Spline to starter stack.
+                .splineTo(new Vector2d(-28.5, -36.5), Math.toRadians(0))
+
+                // Run intake mechanism to collect 3 rings.
+                .addDisplacementMarker(this::activateIntake)
+                .forward(intakeDistance)
+                .addDisplacementMarker(this::deactivateIntake)
+
+                // 6) Spline to shooting point.
+                .splineTo(new Vector2d(-12, -36.5), Math.toRadians(0))
+
+                // Ready shooter motors.
+                .addTemporalMarker(shooterPrepTimeFarZone2, this::activateShooters)
+
+                // Shoot 3 rings into high goal.
+                .addDisplacementMarker(() -> {
+                    shootHighGoals();
+                    deactivateShooters();
+                })
+
+                // 7) Spline to 2nd drop-off point at far zone.
+                .splineTo(new Vector2d(59, -40), Math.toRadians(270))
 
                 // Drop the second wobble goal.
                 .addDisplacementMarker(this::dropWobbleGoal)
 
-                // 6) Spline to parking point.
-                .splineTo(new Vector2d(11, -30), Math.toRadians(0))
+                // 8) Spline to parking point.
+                .splineTo(new Vector2d(11, -30), Math.toRadians(90))
+
+                // TODO Remove after testing, will mess up auto path.
+                .splineToSplineHeading(
+                        new Pose2d(-62, -50, Math.toRadians(0)),
+                        Math.toRadians(180)
+                )
 
                 // Return trajectory.
                 .build();
@@ -444,7 +482,7 @@ public class MainOpMode extends LinearOpMode {
      */
     private void dropWobbleGoal() {
         // TODO Open elbow before parking.
-        elbow.setPosition(elbowClosePosition);
+        elbow.setPosition(elbowDownPosition);
         jaw.setPosition(jawOpenPosition);
     }
 
@@ -453,9 +491,9 @@ public class MainOpMode extends LinearOpMode {
      */
     private void obtainWobbleGoal() {
         // TODO Close elbow before shooting.
-        elbow.setPosition(elbowClosePosition);
+        elbow.setPosition(elbowDownPosition);
         jaw.setPosition(jawClosePosition);
-        elbow.setPosition(elbowOpenPosition);
+        elbow.setPosition(elbowUpPosition);
     }
 
     /**

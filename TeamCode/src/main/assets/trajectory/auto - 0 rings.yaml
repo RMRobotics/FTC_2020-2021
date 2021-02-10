@@ -20,9 +20,9 @@ waypoints:
 - position:
     x: -50.0
     y: -15.5
-  heading: 0.0
+  heading: 4.71238898038469
   tangent: 4.71238898038469
-  interpolationType: "TANGENT"
+  interpolationType: "LINEAR"
 - position:
     x: -10.0
     y: -60.0
