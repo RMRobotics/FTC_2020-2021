@@ -89,14 +89,13 @@ public class MecanumOpMode extends LinearOpMode {
             if (gamepad1.left_trigger > .2){
                 hopperPosition = hopperInputAngle;
                 indexerPosition = indexerDownAngle;
+                transferPower = gamepad1.left_trigger;
+                intakePower = gamepad1.left_trigger;
             }
-
-            if (gamepad2IsDominant)
-            {
-                transferPower = -gamepad2.right_trigger;
-                intakePower = -gamepad2.right_trigger;
+            if (gamepad1.right_trigger > .2){
+                transferPower = -gamepad1.left_trigger;
+                intakePower = -gamepad1.left_trigger;
             }
-
             if (gamepad2.right_bumper)
             {
                 indexerPosition = indexerUpAngle;

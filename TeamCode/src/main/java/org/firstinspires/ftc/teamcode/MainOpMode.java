@@ -27,6 +27,7 @@ public class MainOpMode extends LinearOpMode {
 
     private DcMotor shooter1;
     private DcMotor shooter2;
+    private DcMotor transfer;
     private DcMotor intake;
     private DcMotor fl;
     private DcMotor bl;
@@ -46,15 +47,17 @@ public class MainOpMode extends LinearOpMode {
     double shooterPowerSettingHigh;
     double intakePowerSetting;
 
+    double transferPowerSetting;
     double indexerUpPosition;
     double indexerDownPosition;
-    double elbowDownPosition;
     double elbowUpPosition;
+    double elbowDownPosition;
     double hopperInputAngle;
     double hopperOutputAngle;
     double jawOpenPosition;
     double jawClosePosition;
 
+    double tuneX, tuneY;
     double intakeDistance;
     double powershotAngle;
     double openIntakePosition;
@@ -79,6 +82,7 @@ public class MainOpMode extends LinearOpMode {
         tfodUltimateGoal    = new TfodCurrentGame();
         shooter1            = hardwareMap.get(DcMotor.class, "shooter1");
         shooter2            = hardwareMap.get(DcMotor.class, "shooter2");
+        transfer            = hardwareMap.get(DcMotor.class, "transfer");
         intake              = hardwareMap.get(DcMotor.class, "intake");
         fl                  = hardwareMap.get(DcMotor.class, "fl");
         bl                  = hardwareMap.get(DcMotor.class, "bl");
@@ -95,10 +99,11 @@ public class MainOpMode extends LinearOpMode {
         shooterPowerSettingLow      = 0.6;
         intakePowerSetting          = 1;
 
+        transferPowerSetting        = 1;
         indexerUpPosition           = 0.3;      // TODO fix wth robot.
         indexerDownPosition         = 0;        // TODO fix wth robot.
-        elbowDownPosition = 0.7;
-        elbowUpPosition = 0.28;
+        elbowUpPosition           = 0.7;
+        elbowDownPosition             = 0.28;
         hopperInputAngle            = 0.1;      // TODO Hopper up position = 0.29
         hopperOutputAngle           = 0.29;     // TODO Hopper down position = 0.1
         jawOpenPosition             = 0.1;      // TODO set position for jaw, also needs tele-op.
@@ -117,9 +122,10 @@ public class MainOpMode extends LinearOpMode {
 
         // Configure all devices before operation.
         hopper.setPosition(0.29);
-        cameraServo.setPosition(0.17);
+        cameraServo.setPosition(0.3);
+        cameraServo.setPosition(0);
         jaw.setPosition(jawClosePosition);
-        elbow.setPosition(elbowDownPosition);
+        elbow.setPosition(elbowUpPosition);
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
@@ -224,18 +230,12 @@ public class MainOpMode extends LinearOpMode {
                 .splineTo(new Vector2d(-1, -50), Math.toRadians(30))
 
                 // Ready shooter motors.
-                //.addTemporalMarker(shooterPrepTime1, this::activateShooters)
-                .addDisplacementMarker(() -> {
-                    /*telemetry.addData("Debug", "asdf");
-                    telemetry.update();*/
-                })
+                .addTemporalMarker(shooterPrepTime1, this::activateShooters)
 
                 // Shoot 3 powershots.
                 .addDisplacementMarker(() -> {
-                    /*shootPowershots();
-                    telemetry.addData("Debug", "hjkl");
-                    telemetry.update();
-                    deactivateShooters();*/
+                    shootPowershots();
+                    deactivateShooters();
                 })
 
                 // 3) Spline to 1st drop-off point at close zone at heading of 270°.
@@ -249,7 +249,8 @@ public class MainOpMode extends LinearOpMode {
 
                 // 4) Spline to second wobble goal.
                 .splineToLinearHeading(
-                        new Pose2d(-88, -5.5, Math.toRadians(270)),
+                        // TODO new Pose2d(-88, -5.5, Math.toRadians(270)),
+                        new Pose2d(-50, -15.5, Math.toRadians(270)),
                         Math.toRadians(270)
                 )
 
@@ -429,6 +430,7 @@ public class MainOpMode extends LinearOpMode {
 
         // Set hopper down.
         hopper.setPosition(hopperInputAngle);
+        transfer.setPower(transferPowerSetting);
 
         // Run intake mechanism.
         intake.setPower(intakePowerSetting);
@@ -440,6 +442,7 @@ public class MainOpMode extends LinearOpMode {
     private void deactivateIntake() {
         // Stop intake mechanism.
         intake.setPower(0);
+        transfer.setPower(0);
 
         // Set hopper up.
         hopper.setPosition(hopperOutputAngle);
