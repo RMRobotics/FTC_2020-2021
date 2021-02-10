@@ -53,12 +53,18 @@ public class MecanumOpMode extends LinearOpMode {
         indexer     = hardwareMap.servo.get("indexer");
 
         //initializing default servo value
-        double hopperInputAngle = .1;
-        double hopperOutputAngle = .29;
-        double hopperAngle = hopperInputAngle;
-        double elbowAngle = 0;
-        double jawPosition = 0;
-        double indexerPosition = 0;
+        double elbowUpAngle = 0.70;
+        double elbowDownAngle = 0.28;
+        double jawOpenAngle = 0.1;
+        double jawClosedAngle = 0.36;
+        double hopperInputAngle = 0.1;
+        double hopperOutputAngle = 0.29;
+        double indexerUpAngle = 0.3;
+        double indexerDownAngle = 0;
+        double elbowPosition = elbowUpAngle;
+        double jawPosition = jawClosedAngle;
+        double hopperPosition = hopperInputAngle;
+        double indexerPosition = indexerDownAngle;
 
         //setting shooters to use encoders
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -68,8 +74,8 @@ public class MecanumOpMode extends LinearOpMode {
 
         while (opModeIsActive())
         {
-            double intakePower      = gamepad1.left_trigger;
-            double shooterPower     = -gamepad1.right_trigger;
+            double intakePower      = gamepad1.right_trigger;
+            double shooterPower     = -gamepad2.right_trigger;
             double transferPower    = gamepad1.left_trigger;
 
             boolean gamepad2IsDominant = gamepad2.right_trigger > gamepad1.right_trigger;
@@ -81,8 +87,8 @@ public class MecanumOpMode extends LinearOpMode {
             // TODO Fix the indexer position
 
             if (gamepad1.left_trigger > .2){
-                hopperAngle = hopperInputAngle;
-                indexerPosition = 0;
+                hopperPosition = hopperInputAngle;
+                indexerPosition = indexerDownAngle;
             }
 
             if (gamepad2IsDominant)
@@ -93,11 +99,11 @@ public class MecanumOpMode extends LinearOpMode {
 
             if (gamepad2.right_bumper)
             {
-                indexerPosition = 0.3;
+                indexerPosition = indexerUpAngle;
             }
             else if (gamepad2.left_bumper)
             {
-                indexerPosition = 0;
+                indexerPosition = indexerDownAngle;
             }
 
             flMotor.setDirection(DcMotor.Direction.REVERSE);
@@ -109,16 +115,16 @@ public class MecanumOpMode extends LinearOpMode {
 
 
             if (gamepad1.x) {
-                hopperAngle = hopperInputAngle;
-                indexerPosition = 0;
+                hopperPosition = hopperInputAngle;
+                indexerPosition = indexerDownAngle;
             }
-            else if (gamepad1.y) hopperAngle = hopperOutputAngle;
+            else if (gamepad1.y) hopperPosition = hopperOutputAngle;
 
-            if (gamepad2.a)  elbowAngle = 0.28; // Down
-            else if (gamepad2.b) elbowAngle = 0.70; // Up
+            if (gamepad2.a)  elbowPosition = elbowDownAngle;
+            else if (gamepad2.b) elbowPosition = elbowUpAngle;
 
-            if (gamepad2.x) jawPosition = 0.36; // Close
-            else if (gamepad2.y) jawPosition = 0.1; // Open
+            if (gamepad2.x) jawPosition = jawClosedAngle;
+            else if (gamepad2.y) jawPosition = jawOpenAngle;
 
             double[] speeds = {
                     (drive + strafe +twist),
@@ -132,7 +138,7 @@ public class MecanumOpMode extends LinearOpMode {
                 if (max < Math.abs(speed)) max = Math.abs(speed);
             }
 
-            if (max > 1 )
+            if (max > 1)
             {
                 for (int i = 0; i < speeds.length; i++) speeds[i] /= max;
             }
@@ -178,8 +184,8 @@ public class MecanumOpMode extends LinearOpMode {
 
             transfer.setPower(transferPower);
 
-            hopperServo.setPosition(hopperAngle);
-            elbow.setPosition(elbowAngle);
+            hopperServo.setPosition(hopperPosition);
+            elbow.setPosition(elbowPosition);
             jaw.setPosition(jawPosition);
 
             telemetry.addData("pressing x: ", "value: " + gamepad2.x);

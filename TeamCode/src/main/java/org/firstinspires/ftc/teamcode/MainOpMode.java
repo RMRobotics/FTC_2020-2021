@@ -59,12 +59,10 @@ public class MainOpMode extends LinearOpMode {
     double powershotAngle;
     double openIntakePosition;
 
-    double timeForShooting;
-    double shootingTimeFarZone1;
-    double shootingTimeFarZone2;
-    double shootingTimeMiddleZone1;
-    double shootingTimeMiddleZone2;
-    double shootingTimeCloseZone;
+    double shootingDuration;
+    double shooterPrepTime1;
+    double shooterPrepTimeFarZone2;
+    double shooterTimeMiddleZone2;
 
     /**
      * Operation mode method.
@@ -110,16 +108,16 @@ public class MainOpMode extends LinearOpMode {
         powershotAngle              = 5;        // TODO test at Makerspace.
         openIntakePosition          = 0.11;
 
-        timeForShooting             = 5;
-        shootingTimeFarZone1        = 1;        // TODO Test with robot, also estimate.
-        shootingTimeFarZone2        = 0;        // TODO Use road runner GUI.
-        shootingTimeMiddleZone1     = 0;
-        shootingTimeMiddleZone2     = 0;
-        shootingTimeCloseZone       = 0;
+        shootingDuration            = 4;
+        shooterPrepTime1            = 1;        // TODO Test with robot, also estimate.
+        shooterPrepTimeFarZone2     = 10        // TODO Use road runner GUI.
+                + shootingDuration;
+        shooterTimeMiddleZone2      = 8
+                + shootingDuration;
 
         // Configure all devices before operation.
-        //hopper.setPosition(0.29);
-        cameraServo.setPosition(0.17);
+        hopper.setPosition(0.29);
+        cameraServo.setPosition(-0.17);
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
@@ -222,7 +220,7 @@ public class MainOpMode extends LinearOpMode {
                 .splineTo(new Vector2d(-1, -50), Math.toRadians(30))
 
                 // Ready shooter motors.
-                .addTemporalMarker(shootingTimeFarZone1, this::activateShooters)
+                .addTemporalMarker(shooterPrepTime1, this::activateShooters)
 
                 // Shoot 3 powershots.
                 .addDisplacementMarker(() -> {
@@ -254,7 +252,7 @@ public class MainOpMode extends LinearOpMode {
                 .splineTo(new Vector2d(-12, -36.5), Math.toRadians(0))
 
                 // Ready shooter motors.
-                .addTemporalMarker(shootingTimeFarZone2, this::activateShooters)
+                .addTemporalMarker(shooterPrepTimeFarZone2, this::activateShooters)
 
                 // Shoot 3 rings into high goal.
                 .addDisplacementMarker(() -> {
@@ -285,7 +283,7 @@ public class MainOpMode extends LinearOpMode {
                 .splineTo(new Vector2d(-1, -50), Math.toRadians(30))
 
                 // Ready shooter motors.
-                .addTemporalMarker(shootingTimeMiddleZone1, this::activateShooters)
+                .addTemporalMarker(shooterPrepTime1, this::activateShooters)
 
                 // Shoot 3 powershots.
                 .addDisplacementMarker(() -> {
@@ -320,7 +318,7 @@ public class MainOpMode extends LinearOpMode {
                 .splineTo(new Vector2d(-12, -36.5), Math.toRadians(0))
 
                 // Ready shooter motors.
-                .addTemporalMarker(shootingTimeMiddleZone2, this::activateShooters)
+                .addTemporalMarker(shooterTimeMiddleZone2, this::activateShooters)
 
                 // Shoot 3 rings into high goal.
                 .addDisplacementMarker(() -> {
@@ -347,14 +345,14 @@ public class MainOpMode extends LinearOpMode {
                 // 2) Spline to powershot position.
                 .splineTo(new Vector2d(-1, -50), Math.toRadians(30))
 
-                /*// Ready shooter motors.
-                .addTemporalMarker(shootingTimeCloseZone, this::activateShooters)
+                // Ready shooter motors.
+                .addTemporalMarker(shooterPrepTime1, this::activateShooters)
 
                 // Shoot 3 powershots.
                 .addDisplacementMarker(() -> {
                     shootPowershots();
                     deactivateShooters();
-                })*/
+                })
 
                 // 3) Spline to 1st drop-off point at close zone at heading of 270°.
                 .splineToSplineHeading(
@@ -363,19 +361,19 @@ public class MainOpMode extends LinearOpMode {
                 )
 
                 // Drop the first wobble goal.
-                //.addDisplacementMarker(this::dropWobbleGoal)
+                .addDisplacementMarker(this::dropWobbleGoal)
 
                 // 4) Spline to second wobble goal.
                 .splineTo(new Vector2d(-50, -15.5), Math.toRadians(270))
 
                 // Pick up the second wobble goal.
-                //.addDisplacementMarker(this::obtainWobbleGoal)
+                .addDisplacementMarker(this::obtainWobbleGoal)
 
                 // 5) Spline to 2nd drop-off point at close zone.
                 .splineTo(new Vector2d(-10, -60), Math.toRadians(0))
 
                 // Drop the second wobble goal.
-                //.addDisplacementMarker(this::dropWobbleGoal)
+                .addDisplacementMarker(this::dropWobbleGoal)
 
                 // 6) Spline to parking point.
                 .splineTo(new Vector2d(11, -30), Math.toRadians(0))
