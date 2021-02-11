@@ -102,8 +102,8 @@ public class MainOpMode extends LinearOpMode {
         transferPowerSetting        = 1;
         indexerUpPosition           = 0.3;      // TODO fix wth robot.
         indexerDownPosition         = 0;        // TODO fix wth robot.
-        elbowUpPosition           = 0.7;
-        elbowDownPosition             = 0.28;
+        elbowUpPosition             = 0.7;
+        elbowDownPosition           = 0.28;
         hopperInputAngle            = 0.1;      // TODO Hopper up position = 0.29
         hopperOutputAngle           = 0.29;     // TODO Hopper down position = 0.1
         jawOpenPosition             = 0.1;      // TODO set position for jaw, also needs tele-op.
