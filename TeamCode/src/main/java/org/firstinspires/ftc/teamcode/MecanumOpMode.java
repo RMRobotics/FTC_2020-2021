@@ -53,18 +53,18 @@ public class MecanumOpMode extends LinearOpMode {
         indexer     = hardwareMap.servo.get("indexer");
 
         //initializing default servo value
-        double elbowUpAngle = 0.70;
-        double elbowDownAngle = 0.28;
-        double jawOpenAngle = 0.1;
-        double jawClosedAngle = 0.36;
-        double hopperInputAngle = 0.1;
-        double hopperOutputAngle = 0.29;
-        double indexerUpAngle = 0.3;
-        double indexerDownAngle = 0;
-        double elbowPosition = elbowUpAngle;
-        double jawPosition = jawClosedAngle;
-        double hopperPosition = hopperInputAngle;
-        double indexerPosition = indexerDownAngle;
+        double elbowUpAngle         = 0.7;
+        double elbowDownAngle       = 0.4;
+        double jawOpenAngle         = 0.1;
+        double jawClosedAngle       = 0.36;
+        double hopperInputAngle     = 0.1;
+        double hopperOutputAngle    = 0.29;
+        double indexerUpAngle       = 0.3;
+        double indexerDownAngle     = 0;
+        double elbowPosition        = elbowUpAngle;
+        double jawPosition          = jawClosedAngle;
+        double hopperPosition       = hopperInputAngle;
+        double indexerPosition      = indexerDownAngle;
 
         //setting shooters to use encoders
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);

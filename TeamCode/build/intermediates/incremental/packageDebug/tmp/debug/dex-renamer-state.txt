@@ -1,4 +1,4 @@
-#Wed Feb 17 17:48:48 EST 2021
+#Mon Feb 22 17:38:42 EST 2021
 path.3=classes_0.dex
 path.2=classes2.dex
 path.1=classes.dex
@@ -7,7 +7,7 @@ renamed.3=classes4.dex
 renamed.2=classes3.dex
 renamed.1=classes2.dex
 renamed.0=classes.dex
-base.3=/Users/cyberlives/Documents/Coding/FTC_2020-2021/TeamCode/build/intermediates/dex/debug/mergeLibDexDebug/classes_0.dex
-base.2=/Users/cyberlives/Documents/Coding/FTC_2020-2021/TeamCode/build/intermediates/dex/debug/mergeExtDexDebug/classes2.dex
-base.1=/Users/cyberlives/Documents/Coding/FTC_2020-2021/TeamCode/build/intermediates/dex/debug/mergeProjectDexDebug/classes.dex
-base.0=/Users/cyberlives/Documents/Coding/FTC_2020-2021/TeamCode/build/intermediates/dex/debug/mergeExtDexDebug/classes.dex
+base.3=/Users/cyberlives/Documents/Coding/Robotics/StudioProjects/FTC_2020-2021/TeamCode/build/intermediates/dex/debug/mergeLibDexDebug/classes_0.dex
+base.2=/Users/cyberlives/Documents/Coding/Robotics/StudioProjects/FTC_2020-2021/TeamCode/build/intermediates/dex/debug/mergeExtDexDebug/classes2.dex
+base.1=/Users/cyberlives/Documents/Coding/Robotics/StudioProjects/FTC_2020-2021/TeamCode/build/intermediates/dex/debug/mergeProjectDexDebug/classes.dex
+base.0=/Users/cyberlives/Documents/Coding/Robotics/StudioProjects/FTC_2020-2021/TeamCode/build/intermediates/dex/debug/mergeExtDexDebug/classes.dex

@@ -27,20 +27,20 @@ import java.util.List;
  */
 @Config
 public class StandardTrackingWheelLocalizer extends ThreeTrackingWheelLocalizer {
-    public static double TICKS_PER_REV = 8192;
-    public static double WHEEL_RADIUS = 1.5; // in
+    public static double TICKS_PER_REV = 8192; // Based on specs of Through Bore Encoder - https://www.revrobotics.com/rev-11-1271/
+    public static double WHEEL_RADIUS = 0.75; // in - based on actual measurement
     public static double GEAR_RATIO = 1; // output (wheel) speed / input (encoder) speed
 
-    public static double LATERAL_DISTANCE = 7.8475869027045855; // in; distance between the left and right wheels
-    public static double FORWARD_OFFSET = 6; // in; offset of the lateral wheel
+    public static double LATERAL_DISTANCE = 12.685; // in; distance between the left and right wheels
+    public static double FORWARD_OFFSET = -8; // in; offset of the lateral wheel
 
     private Encoder leftEncoder, rightEncoder, frontEncoder;
 
-    // TODO Old x values: 2.61068632735, 0.19526396761, 0.50081
-    // TODO Old y values: 41.971067844, 9.22728466553, 0.25311271037, 0.514645
+    // TODO Old x values: 2.61068632735, 0.19526396761, 0.50081, 0.61
+    // TODO Old y values: 41.971067844, 9.22728466553, 0.25311271037, 0.514645, 0.60
 
-    public static double X_MULTIPlIER = 0.61;
-    public static double Y_MULTIPLIER = 0.60;
+    public static double X_MULTIPlIER = 1;
+    public static double Y_MULTIPLIER = 1;
 
     public StandardTrackingWheelLocalizer(HardwareMap hardwareMap) {
         super(Arrays.asList(

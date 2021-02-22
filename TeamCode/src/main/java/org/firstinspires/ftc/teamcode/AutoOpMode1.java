@@ -109,6 +109,8 @@ public class AutoOpMode1 extends LinearOpMode {
         jawOpenPosition             = 0.1;      // TODO set position for jaw, also needs tele-op.
         jawClosePosition            = 0.36;     // TODO set position for jaw, also needs tele-
 
+        tuneX                       = -30;
+        tuneY                       = -10;
         intakeDistance              = 0;        // TODO fix with robot, currently set to 0.
         powershotAngle              = 5;        // TODO test at Makerspace.
         openIntakePosition          = 0.11;
@@ -122,8 +124,8 @@ public class AutoOpMode1 extends LinearOpMode {
 
         // Configure all devices before operation.
         hopper.setPosition(0.29);
-        cameraServo.setPosition(0.3);
-        cameraServo.setPosition(0);
+        /* cameraServo.setPosition(0.3);
+        cameraServo.setPosition(0); */
         jaw.setPosition(jawClosePosition);
         elbow.setPosition(elbowUpPosition);
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -230,13 +232,13 @@ public class AutoOpMode1 extends LinearOpMode {
                 .splineTo(new Vector2d(-1, -50), Math.toRadians(30))
 
                 // Ready shooter motors.
-                .addTemporalMarker(shooterPrepTime1, this::activateShooters)
+                //.addTemporalMarker(shooterPrepTime1, this::activateShooters)
 
-                // Shoot 3 powershots.
+                /*/ Shoot 3 powershots.
                 .addDisplacementMarker(() -> {
                     //shootPowershots();
                     deactivateShooters();
-                })
+                })*/
 
                 // 3) Spline to 1st drop-off point at close zone at heading of 270°.
                 .splineToSplineHeading(
@@ -245,9 +247,14 @@ public class AutoOpMode1 extends LinearOpMode {
                 )
 
                 // Drop the first wobble goal.
-                .addDisplacementMarker(this::dropWobbleGoal)
+                //.addDisplacementMarker(this::dropWobbleGoal)
 
                 // 4) Spline to second wobble goal.
+                .splineToLinearHeading(
+                        new Pose2d(-20, -10, Math.toRadians(270)),
+                        Math.toRadians(180)
+                )
+
                 .splineToLinearHeading(
                         // TODO new Pose2d(-88, -5.5, Math.toRadians(270)),
                         new Pose2d(-50, -15.5, Math.toRadians(270)),
@@ -255,22 +262,16 @@ public class AutoOpMode1 extends LinearOpMode {
                 )
 
                 // Pick up the second wobble goal.
-                .addDisplacementMarker(this::obtainWobbleGoal)
+                //.addDisplacementMarker(this::obtainWobbleGoal)
 
-                // 5) Spline to 2nd drop-off point at close zone.
+                /*/ 5) Spline to 2nd drop-off point at close zone.
                 .splineTo(new Vector2d(-10, -60), Math.toRadians(0))
 
                 // Drop the second wobble goal.
                 .addDisplacementMarker(this::dropWobbleGoal)
 
                 // 6) Spline to parking point.
-                .splineTo(new Vector2d(11, -30), Math.toRadians(0))
-
-                // TODO Remove after testing, will mess up auto path.
-                .splineToSplineHeading(
-                        new Pose2d(-62, -50, Math.toRadians(0)),
-                        Math.toRadians(180)
-                )
+                .splineTo(new Vector2d(11, -30), Math.toRadians(0))*/
 
                 // Return trajectory.
                 .build();
