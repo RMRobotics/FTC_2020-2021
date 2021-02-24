@@ -53,7 +53,7 @@ public class MecanumOpMode extends LinearOpMode {
         indexer     = hardwareMap.servo.get("indexer");
 
         //initializing default servo value
-        double elbowUpAngle         = 0.7;
+        double elbowUpAngle         = 0.1;
         double elbowDownAngle       = 0.4;
         double jawOpenAngle         = 0.1;
         double jawClosedAngle       = 0.36;

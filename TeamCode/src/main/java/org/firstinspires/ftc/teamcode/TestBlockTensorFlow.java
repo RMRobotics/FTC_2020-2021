@@ -11,13 +11,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaCurrentGame;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
 import org.firstinspires.ftc.robotcore.external.tfod.TfodCurrentGame;
+import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
 @Autonomous(name = "TestBlockTensorFlow (Blocks to Java)")
 public class TestBlockTensorFlow extends LinearOpMode {
 
     private VuforiaCurrentGame vuforiaUltimateGoal;
     private TfodCurrentGame tfodUltimateGoal;
-    private Servo hopperangle;
+    private Servo hopper;
     private DcMotor shooter1;
     private DcMotor shooter2;
     private DcMotor fl;
@@ -26,7 +27,7 @@ public class TestBlockTensorFlow extends LinearOpMode {
     private DcMotor br;
     private Servo indexer;
     private Servo elbow;
-    private CRServo jaw;
+    private Servo jaw;
 
     Recognition recognition;
     double WobbleGoalZone;
@@ -43,17 +44,18 @@ public class TestBlockTensorFlow extends LinearOpMode {
         double index;
 
         vuforiaUltimateGoal = new VuforiaCurrentGame();
-        tfodUltimateGoal = new TfodCurrentGame();
-        hopperangle = hardwareMap.get(Servo.class, "hopperangle");
-        shooter1 = hardwareMap.get(DcMotor.class, "shooter1");
-        shooter2 = hardwareMap.get(DcMotor.class, "shooter2");
-        fl = hardwareMap.get(DcMotor.class, "fl");
-        bl = hardwareMap.get(DcMotor.class, "bl");
-        fr = hardwareMap.get(DcMotor.class, "fr");
-        br = hardwareMap.get(DcMotor.class, "br");
-        indexer = hardwareMap.get(Servo.class, "indexer");
-        elbow = hardwareMap.get(Servo.class, "elbow");
-        jaw = hardwareMap.get(CRServo.class, "jaw");
+        tfodUltimateGoal    = new TfodCurrentGame();
+
+        shooter1            = hardwareMap.get(DcMotor.class, "shooter1");
+        shooter2            = hardwareMap.get(DcMotor.class, "shooter2");
+        fl                  = hardwareMap.get(DcMotor.class, "fl");
+        bl                  = hardwareMap.get(DcMotor.class, "bl");
+        fr                  = hardwareMap.get(DcMotor.class, "fr");
+        br                  = hardwareMap.get(DcMotor.class, "br");
+        jaw                 = hardwareMap.get(Servo.class, "jaw");
+        hopper              = hardwareMap.get(Servo.class, "hopper");
+        indexer             = hardwareMap.get(Servo.class, "indexer");
+        elbow               = hardwareMap.get(Servo.class, "elbow");
 
         // Sample TFOD Op Mode
         // Initialize Vuforia.
@@ -81,12 +83,12 @@ public class TestBlockTensorFlow extends LinearOpMode {
         tfodUltimateGoal.setZoom(2.5, 16 / 9);
         telemetry.addData(">", "Press Play to start");
         telemetry.update();
-        hopperangle.setPosition(0.29);
+        hopper.setPosition(0.29);
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         ShooterPowerSetting = 0.9;
-        IndexerUpPosition = 0.2;
-        IndexerDownPosition = 0.8;
+        IndexerUpPosition = 0.3;
+        IndexerDownPosition = 0;
         // Wait for start command from Driver Station.
         waitForStart();
         if (opModeIsActive()) {
@@ -174,9 +176,9 @@ public class TestBlockTensorFlow extends LinearOpMode {
         br.setPower(0);
         elbow.setPosition(0.7);
         sleep(1000);
-        jaw.setPower(-1);
+        jaw.setPosition(0.1);
         sleep(500);
-        jaw.setPower(0);
+        jaw.setPosition(0.36);
         fl.setPower(-0.5);
         bl.setPower(-0.5);
         fr.setPower(0.5);
@@ -232,9 +234,9 @@ public class TestBlockTensorFlow extends LinearOpMode {
         br.setPower(0);
         elbow.setPosition(0.7);
         sleep(1000);
-        jaw.setPower(-1);
+        jaw.setPosition(0.1);
         sleep(500);
-        jaw.setPower(0);
+        jaw.setPosition(0.36);
         fl.setPower(-0.5);
         bl.setPower(-0.5);
         fr.setPower(0.5);
@@ -290,9 +292,9 @@ public class TestBlockTensorFlow extends LinearOpMode {
         br.setPower(0);
         elbow.setPosition(0.7);
         sleep(1000);
-        jaw.setPower(-1);
+        jaw.setPosition(0.1);
         sleep(500);
-        jaw.setPower(0);
+        jaw.setPosition(0.36);
         fl.setPower(-0.5);
         bl.setPower(-0.5);
         fr.setPower(0.5);
