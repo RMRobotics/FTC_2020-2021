@@ -53,8 +53,8 @@ public class MecanumOpMode extends LinearOpMode {
         indexer     = hardwareMap.servo.get("indexer");
 
         //initializing default servo value
-        double elbowUpAngle         = 0.1;
-        double elbowDownAngle       = 0.4;
+        double elbowUpAngle         = 0.05;
+        double elbowDownAngle       = 0.6;
         double jawOpenAngle         = 0.1;
         double jawClosedAngle       = 0.36;
         double hopperInputAngle     = 0.1;
@@ -119,8 +119,8 @@ public class MecanumOpMode extends LinearOpMode {
             }
             else if (gamepad1.y) hopperPosition = hopperOutputAngle;
 
-            if (gamepad2.a)  elbowPosition = elbowDownAngle;
-            else if (gamepad2.b) elbowPosition = elbowUpAngle;
+            if (gamepad2.a)  elbowPosition = elbowUpAngle;        // TODO
+            else if (gamepad2.b) elbowPosition = elbowDownAngle;  // TODO
 
             if (gamepad2.x) jawPosition = jawClosedAngle;
             else if (gamepad2.y) jawPosition = jawOpenAngle;

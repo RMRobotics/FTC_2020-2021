@@ -476,22 +476,15 @@ public class AutoOpMode1 extends LinearOpMode {
         // Run intake mechanism to collect 3 rings.
         //activateIntake();
 
-        // Trajectory 5.
-        Trajectory trajectory5 = drive.trajectoryBuilder(trajectory4.end())
-                .forward(intakeDistance)
-
-                .build();
-        drive.followTrajectory(trajectory5);
-
         //deactivateIntake();
 
-        // Trajectory 6.
-        Trajectory trajectory6 = drive.trajectoryBuilder(trajectory5.end())
+        // Trajectory 5.
+        Trajectory trajectory5 = drive.trajectoryBuilder(trajectory4.end())
                 // 6) Spline to shooting point.
                 .splineTo(new Vector2d(-12, -36.5), Math.toRadians(0))
 
                 .build();
-        drive.followTrajectory(trajectory6);
+        drive.followTrajectory(trajectory5);
 
         /*/ Shoot 3 rings into high goal.
         activateShooters();
@@ -499,23 +492,23 @@ public class AutoOpMode1 extends LinearOpMode {
         deactivateShooters();*/
 
         // Trajectory 7.
-        Trajectory trajectory7 = drive.trajectoryBuilder(trajectory6.end())
+        Trajectory trajectory6 = drive.trajectoryBuilder(trajectory5.end())
                 // 7) Spline to 2nd drop-off point at far zone.
                 .splineTo(new Vector2d(50, -40), Math.toRadians(270))
 
                 .build();
-        drive.followTrajectory(trajectory7);
+        drive.followTrajectory(trajectory6);
 
         // Drop the second wobble goal.
         //dropWobbleGoal();
 
         // Trajectory 8.
-        Trajectory trajectory8 = drive.trajectoryBuilder(trajectory7.end())
+        Trajectory trajectory7 = drive.trajectoryBuilder(trajectory6.end())
                 // 8) Spline to parking point.
                 .splineTo(new Vector2d(11, -30), Math.toRadians(90))
 
                 .build();
-        drive.followTrajectory(trajectory8);
+        drive.followTrajectory(trajectory7);
     }
 
     /**
