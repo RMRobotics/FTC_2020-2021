@@ -36,7 +36,7 @@ waypoints:
   tangent: 0.0
   interpolationType: "TANGENT"
 - position:
-    x: 59.0
+    x: 50.0
     y: -40.0
   heading: 0.0
   tangent: 4.71238898038469
