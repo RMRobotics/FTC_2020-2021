@@ -102,7 +102,13 @@ public class MecanumOpMode extends LinearOpMode {
             }
             else if (gamepad2.left_bumper)
             {
-                indexerPosition = indexerDownAngle;
+                for (int i = 0; i < 3; i++) {
+                    indexer.setPosition(indexerUpAngle);
+                    sleep(500);
+                    indexer.setPosition(indexerDownAngle);
+                    sleep(500);
+                }
+
             }
 
             flMotor.setDirection(DcMotor.Direction.REVERSE);

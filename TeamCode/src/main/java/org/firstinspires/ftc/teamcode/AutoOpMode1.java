@@ -17,12 +17,13 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
 import java.util.List;
 
-@Autonomous(name="AutoOpMode (Red)")
+@Autonomous(name="AutoOpMode 1")
 public class AutoOpMode1 extends LinearOpMode {
     // Data field.
     private VuforiaCurrentGame vuforiaUltimateGoal;
     private TfodCurrentGame tfodUltimateGoal;
     private SampleMecanumDrive drive;
+    private Trajectory trajectory;
 
     private DcMotor shooter1;
     private DcMotor shooter2;
@@ -57,8 +58,9 @@ public class AutoOpMode1 extends LinearOpMode {
     double jawClosePosition;
 
     double intakeDistance;
+    double highGoalAngle;
     double powershotAngle;
-    double powershotRotation;
+    double powershotTurn;
     double openIntakePosition;
 
     double shootingDuration;
@@ -94,7 +96,7 @@ public class AutoOpMode1 extends LinearOpMode {
         elbow               = hardwareMap.get(Servo.class, "elbow");
 
         // Configure all variables before operation.
-        shooterPowerSettingHigh     = 0.9;
+        shooterPowerSettingHigh     = 0.59;
         shooterPowerSettingLow      = 0.55;
         intakePowerSetting          = 1;
 
@@ -108,14 +110,23 @@ public class AutoOpMode1 extends LinearOpMode {
         jawOpenPosition             = 0.1;      // TODO set position for jaw, also needs tele-op.
         jawClosePosition            = 0.36;     // TODO set position for jaw, also needs tele-
 
-        intakeDistance              = 5;        // TODO fix with robot, currently set to 0.
+        intakeDistance              = 0;        // TODO fix with robot, currently set to 0.
+        highGoalAngle               = 10;
         powershotAngle              = 26;
-        powershotRotation           = 3;
-        openIntakePosition          = 0.6;
+        powershotTurn               = 4;
+        openIntakePosition          = 0.11;
+
+        shootingDuration            = 4;
+        shooterPrepTime1            = 1;        // TODO Test with robot, also estimate.
+        shooterPrepTimeFarZone2     = 10        // TODO Use road runner GUI.
+                + shootingDuration;
+        shooterTimeMiddleZone2      = 8
+                + shootingDuration;
 
         // Configure all devices before operation.
         hopper.setPosition(0.29);
-        cameraServo.setPosition(0);
+        /* cameraServo.setPosition(0.3);
+        cameraServo.setPosition(0); */
         jaw.setPosition(jawClosePosition);
         elbow.setPosition(elbowUpPosition);
         shooter1.setDirection(DcMotor.Direction.REVERSE);
@@ -144,7 +155,7 @@ public class AutoOpMode1 extends LinearOpMode {
         // Initialize TensorFlow engine.
         tfodUltimateGoal.initialize(
                 vuforiaUltimateGoal,
-                0.7F, // Set minimum confidence threshold to 0.7.
+                0.4F, // Set minimum confidence threshold to 0.7.
                 true,
                 true
         );
@@ -152,29 +163,9 @@ public class AutoOpMode1 extends LinearOpMode {
         // Activate and configure TensorFlow recognition engine.
         tfodUltimateGoal.activate();
         tfodUltimateGoal.setZoom(2.5, 16 / 9.0);
-
-        // Get recognitions from TensorFlow engine.
-        recognitions = tfodUltimateGoal.getRecognitions();
-
-        // Initialize index variable.
-        index = 0;
-
-        // Iterate through recognitions.
-        for (Recognition recognition : recognitions) {
-            // Define recognition.
-            this.recognition = recognition;
-
-            // Display info regarding recognition.
-            displayInfo(index);
-
-            // Increment index.
-            index++;
-        }
-
         // Update telemetry.
         telemetry.addData(">", "Press Play to start");
         telemetry.update();
-
         // Wait for start command from Driver Station.
         waitForStart();
 
@@ -230,12 +221,13 @@ public class AutoOpMode1 extends LinearOpMode {
             }
         }
 
+
         // Close tensorflow engine.
         tfodUltimateGoal.close();
     }
 
     /**
-     * Goes to farthest square if there are 4 rings.
+     * Goes to farthest square if there are 0 rings.
      */
     private void closeZone() {
         /*  Program
@@ -253,9 +245,9 @@ public class AutoOpMode1 extends LinearOpMode {
         // Trajectory 1 to shoot and drop wobble
         // Start at point A (-62, -50)
         // Go to point B (-1, -50)
-        Trajectory trajectory1 = drive.trajectoryBuilder(new Pose2d(-62, -50)) // 1) Start.
+        Trajectory trajectory1 = drive.trajectoryBuilder(new Pose2d(-63, -50)) // 1) Start.
                 // 2) Spline to powershot and 1st drop-off position.
-                .splineTo(new Vector2d(-1, -50), Math.toRadians(powershotAngle))
+                .splineTo(new Vector2d(-7, -50), Math.toRadians(highGoalAngle))
 
                 // End trajectory.
                 .build();
@@ -263,7 +255,7 @@ public class AutoOpMode1 extends LinearOpMode {
 
         // Shoot 3 powershots (pegs) with moves 5° each, back to same heading as start.
         activateShooters();
-        shootPowershots();
+        shootHighGoals();
         deactivateShooters();
 
         // Move, drop the wobble, reset back to same heading.
@@ -334,30 +326,28 @@ public class AutoOpMode1 extends LinearOpMode {
          */
 
         // Build trajectory.
-        Trajectory trajectory1 = drive.trajectoryBuilder(new Pose2d(-62, -50)) // 1) Start.
+        Trajectory trajectory1 = drive.trajectoryBuilder(new Pose2d(-63, -50)) // 1) Start.
                 // 2) Spline to powershot position.
-                .splineTo(new Vector2d(-1, -50), Math.toRadians(powershotAngle))
+                .splineTo(new Vector2d(-7, -50), Math.toRadians(highGoalAngle))
 
                 .build();
         drive.followTrajectory(trajectory1);
 
         // Shoot 3 powershots (pegs) with moves 5° each, back to same heading as start.
         activateShooters();
-        shootPowershots();
+        shootHighGoals();
         deactivateShooters();
 
         // Trajectory 2.
         Trajectory trajectory2 = drive.trajectoryBuilder(trajectory1.end())
                 // 3) Spline to 1st drop-off point at middle zone.
-                .splineTo(new Vector2d(15, -33), Math.toRadians(90))
+                .splineTo( new Vector2d(15, -33), Math.toRadians(90))
 
                 .build();
         drive.followTrajectory(trajectory2);
 
         // Drop the first wobble goal.
-        drive.turn(Math.toRadians(-90));
         dropWobbleGoal();
-        drive.turn(Math.toRadians(90));
 
         // Trajectory 3.
         Trajectory trajectory3 = drive.trajectoryBuilder(trajectory2.end())
@@ -365,7 +355,7 @@ public class AutoOpMode1 extends LinearOpMode {
                 .splineTo(new Vector2d(-37, -22), Math.toRadians(180))
 
                 .build();
-        drive.followTrajectory(trajectory3);
+        drive.followTrajectory(trajectory2);
 
         // Pick up the second wobble goal.
         obtainWobbleGoal();
@@ -381,16 +371,23 @@ public class AutoOpMode1 extends LinearOpMode {
         // Activate intake mechanism.
         activateIntake();
 
-        // Trajectory 6.
+        // Trajectory 5.
         Trajectory trajectory5 = drive.trajectoryBuilder(trajectory4.end())
-                // 6) Spline to shooting point.
-                .splineToConstantHeading(new Vector2d(-12, -36.5), Math.toRadians(0))
+            .forward(intakeDistance)
 
-                .build();
+            .build();
         drive.followTrajectory(trajectory5);
 
         // Deactivate intake mechanism.
         deactivateIntake();
+
+        // Trajectory 6.
+        Trajectory trajectory6 = drive.trajectoryBuilder(trajectory5.end())
+                // 6) Spline to shooting point.
+                .splineToConstantHeading(new Vector2d(-12, -36.5), Math.toRadians(0))
+
+                .build();
+        drive.followTrajectory(trajectory6);
 
         // Shoot 3 rings into high goal.
         activateShooters();
@@ -398,124 +395,106 @@ public class AutoOpMode1 extends LinearOpMode {
         deactivateShooters();
 
         // Trajectory 7.
-        Trajectory trajectory6 = drive.trajectoryBuilder(trajectory5.end())
+        Trajectory trajectory7 = drive.trajectoryBuilder(trajectory6.end())
                 // 7) Spline to 2nd drop-off point at middle zone.
                 .splineTo(new Vector2d(15, -43.5), Math.toRadians(0))
 
                 .build();
-        drive.followTrajectory(trajectory6);
+        drive.followTrajectory(trajectory7);
 
         // Drop the second wobble goal and park.
         dropWobbleGoal();
     }
 
     /**
-     * Goes to closest square if there are 0 rings.
+     * Goes to closest square if there are 4 rings.
      */
     private void farZone() {
-        /*  Program
-                Start at A (-62, -52)
-                Go to B (-1, -50)
-                    Shoot and reset angle
-                Go to C (40, -60)
-                    Drop wobble and reset angle
-                Go to D (-37, -22)
-                    Pick wobble
-                Go to E (-28.5, -36.5)
-                    Intake
-                Go to F (-12, -36.5)
-                    Shoot high goals
-                Go to G (50, -40)
-                    Drop wobble
-                Go to H (11, -30) to park.
-         */
-
-        // Trajectory 1.
-        Trajectory trajectory1 = drive.trajectoryBuilder(new Pose2d(-62, -50)) // 1) Start.
+        // Build trajectory.
+        trajectory = drive.trajectoryBuilder(new Pose2d(-62, -50)) // 1) Start.
                 // 2) Spline to powershot position.
                 .splineTo(new Vector2d(-1, -50), Math.toRadians(30))
 
-                .build();
-        drive.followTrajectory(trajectory1);
+                // Ready shooter motors.
+                .addTemporalMarker(shooterPrepTime1, this::activateShooters)
 
-        /*/ Shoot 3 powershots.
-        activateShooters();
-        shootPowershots();
-        deactivateShooters();*/
+                // Shoot 3 powershots.
+                .addDisplacementMarker(() -> {
+                    shootPowershots();
+                    deactivateShooters();
+                })
 
-        // Trajectory 2.
-        Trajectory trajectory2 = drive.trajectoryBuilder(trajectory1.end())
                 // 3) Spline to 1st drop-off point at far zone.
                 .splineTo(new Vector2d(40, -60), Math.toRadians(0))
 
-                .build();
-        drive.followTrajectory(trajectory2);
+                // Drop the first wobble goal.
+                .addDisplacementMarker(this::dropWobbleGoal)
 
-        // Drop the first wobble goal.
-        //dropWobbleGoal();
-
-        // Trajectory 3.
-        Trajectory trajectory3 = drive.trajectoryBuilder(trajectory2.end())
                 // 4) Spline to second wobble goal.
                 .splineTo(new Vector2d(-37, -22), Math.toRadians(180))
 
-                .build();
-        drive.followTrajectory(trajectory3);
+                // Pick up the second wobble goal.
+                .addDisplacementMarker(this::obtainWobbleGoal)
 
-        // Pick up the second wobble goal.
-        //obtainWobbleGoal();
-
-        // Trajectory 4.
-        Trajectory trajectory4 = drive.trajectoryBuilder(trajectory3.end())
                 // 5) Spline to starter stack.
                 .splineTo(new Vector2d(-28.5, -36.5), Math.toRadians(0))
 
-                .build();
-        drive.followTrajectory(trajectory4);
-
-        // Run intake mechanism to collect 3 rings.
-        //activateIntake();
-
-        // Trajectory 5.
-        Trajectory trajectory5 = drive.trajectoryBuilder(trajectory4.end())
+                // Run intake mechanism to collect 3 rings.
+                .addDisplacementMarker(this::activateIntake)
                 .forward(intakeDistance)
+                .addDisplacementMarker(this::deactivateIntake)
 
-                .build();
-        drive.followTrajectory(trajectory5);
-
-        //deactivateIntake();
-
-        // Trajectory 6.
-        Trajectory trajectory6 = drive.trajectoryBuilder(trajectory5.end())
                 // 6) Spline to shooting point.
                 .splineTo(new Vector2d(-12, -36.5), Math.toRadians(0))
 
-                .build();
-        drive.followTrajectory(trajectory6);
+                // Ready shooter motors.
+                .addTemporalMarker(shooterPrepTimeFarZone2, this::activateShooters)
 
-        /*/ Shoot 3 rings into high goal.
-        activateShooters();
-        shootHighGoals();
-        deactivateShooters();*/
+                // Shoot 3 rings into high goal.
+                .addDisplacementMarker(() -> {
+                    shootHighGoals();
+                    deactivateShooters();
+                })
 
-        // Trajectory 7.
-        Trajectory trajectory7 = drive.trajectoryBuilder(trajectory6.end())
                 // 7) Spline to 2nd drop-off point at far zone.
-                .splineTo(new Vector2d(50, -40), Math.toRadians(270))
+                .splineTo(new Vector2d(59, -40), Math.toRadians(270))
 
-                .build();
-        drive.followTrajectory(trajectory7);
+                // Drop the second wobble goal.
+                .addDisplacementMarker(this::dropWobbleGoal)
 
-        // Drop the second wobble goal.
-        //dropWobbleGoal();
-
-        // Trajectory 8.
-        Trajectory trajectory8 = drive.trajectoryBuilder(trajectory7.end())
                 // 8) Spline to parking point.
                 .splineTo(new Vector2d(11, -30), Math.toRadians(90))
 
+                // Return trajectory.
                 .build();
-        drive.followTrajectory(trajectory8);
+    }
+
+    /**
+     * Run intake mechanism.
+     */
+    private void activateIntake() {
+        // TODO Sort out entire intake and high goal code,
+        // TODO Set hopper down when intaking
+
+        // Set hopper down.
+        hopper.setPosition(hopperInputAngle);
+        transfer.setPower(transferPowerSetting);
+
+        // Run intake mechanism.
+        cameraServo.setPosition(openIntakePosition);
+        intake.setPower(intakePowerSetting);
+    }
+
+    /**
+     * Turn off intake mechanism.
+     */
+    private void deactivateIntake() {
+        // Stop intake mechanism.
+        intake.setPower(0);
+        transfer.setPower(0);
+
+        // Set hopper up.
+        hopper.setPosition(hopperOutputAngle);
     }
 
     /**
@@ -530,7 +509,7 @@ public class AutoOpMode1 extends LinearOpMode {
             shoot();
 
             // Turn 5° counterclockwise.
-            drive.turn(Math.toRadians(powershotRotation));
+            drive.turn(Math.toRadians(powershotTurn));
 
             // Increment restoration angle.
             restorationAngle++;
@@ -540,7 +519,7 @@ public class AutoOpMode1 extends LinearOpMode {
         shoot();
 
         // Calculate restoration angle.
-        restorationAngle *= -powershotRotation;
+        restorationAngle *= -powershotTurn;
 
         // Restore angle.
         drive.turn(Math.toRadians(restorationAngle));
@@ -592,43 +571,11 @@ public class AutoOpMode1 extends LinearOpMode {
     }
 
     /**
-     * Run intake mechanism.
-     */
-    private void activateIntake() {
-        // TODO Sort out entire intake and high goal code,
-        // TODO Set hopper down when intaking
-
-        // Set hopper down.
-        hopper.setPosition(hopperInputAngle);
-        transfer.setPower(transferPowerSetting);
-        sleep(500);
-
-        // Run intake mechanism.
-        cameraServo.setPosition(openIntakePosition);
-        intake.setPower(intakePowerSetting);
-        sleep(500);
-    }
-
-    /**
-     * Turn off intake mechanism.
-     */
-    private void deactivateIntake() {
-        // Stop intake mechanism.
-        intake.setPower(0);
-        transfer.setPower(0);
-        sleep(500);
-
-        // Set hopper up.
-        hopper.setPosition(hopperOutputAngle);
-        sleep(500);
-    }
-
-    /**
      * Ready shooter motors.
      */
     private void activateShooters() {
-        shooter1.setPower(shooterPowerSettingLow);
-        shooter2.setPower(shooterPowerSettingLow);
+        shooter1.setPower(shooterPowerSettingHigh);
+        shooter2.setPower(shooterPowerSettingHigh);
         sleep(500);
     }
 
