@@ -44,9 +44,11 @@ public class AutoOpMode2 extends LinearOpMode {
 
     double shooterPowerSettingLow;
     double shooterPowerSettingHigh;
-    double intakePowerSetting;
+    double intakeOnSetting;
+    double intakeOffSetting;
 
-    double transferPowerSetting;
+    double transferOnSetting;
+    double transferOffSetting;
     double indexerUpPosition;
     double indexerDownPosition;
     double elbowUpPosition;
@@ -57,14 +59,9 @@ public class AutoOpMode2 extends LinearOpMode {
     double jawClosePosition;
 
     double intakeDistance;
-    double powershotAngle;
-    double powershotTurn;
     double openIntakePosition;
-
-    double shootingDuration;
-    double shooterPrepTime1;
-    double shooterPrepTimeFarZone2;
-    double shooterTimeMiddleZone2;
+    double powershotAngle;
+    double powershotRotation;
 
     /**
      * Operation mode method.
@@ -96,35 +93,29 @@ public class AutoOpMode2 extends LinearOpMode {
         // Configure all variables before operation.
         shooterPowerSettingHigh     = 0.9;
         shooterPowerSettingLow      = 0.55;
-        intakePowerSetting          = 1;
-
-        transferPowerSetting        = 1;
-        indexerUpPosition           = 0.3;      // TODO fix wth robot.
+        transferOnSetting           = 1;
+        transferOffSetting          = 0;
+        intakeOnSetting             = 1;
+        intakeOffSetting            = 0;
+        indexerUpPosition           = 0.3;     // TODO fix wth robot.
         indexerDownPosition         = 0;        // TODO fix wth robot.
-        elbowUpPosition             = 0;
-        elbowDownPosition           = 0.6;
+        elbowUpPosition             = 0.3;
+        elbowDownPosition           = 0.71;
         hopperInputAngle            = 0.1;      // TODO Hopper up position = 0.29
         hopperOutputAngle           = 0.29;     // TODO Hopper down position = 0.1
-        jawOpenPosition             = 0.1;      // TODO set position for jaw, also needs tele-op.
-        jawClosePosition            = 0.36;     // TODO set position for jaw, also needs tele-
+        jawOpenPosition             = 0.1;      // TODO set position for jaw, also needs tele-op
+        jawClosePosition            = 0.38;     // TODO set position for jaw, also needs tele-op
 
         intakeDistance              = 5;        // TODO fix with robot, currently set to 0.
-        powershotAngle              = 26;
-        powershotTurn               = 3;
         openIntakePosition          = 0.6;
-
-        shootingDuration            = 4;
-        shooterPrepTime1            = 1;        // TODO Test with robot, also estimate.
-        shooterPrepTimeFarZone2     = 10        // TODO Use road runner GUI.
-                + shootingDuration;
-        shooterTimeMiddleZone2      = 8
-                + shootingDuration;
+        powershotAngle              = 25;
+        powershotRotation           = 4;
 
         // Configure all devices before operation.
+        elbow.setPosition(0);
         hopper.setPosition(0.29);
-        cameraServo.setPosition(0);
+        cameraServo.setPosition(0.065);
         jaw.setPosition(jawClosePosition);
-        elbow.setPosition(elbowUpPosition);
         shooter1.setDirection(DcMotor.Direction.REVERSE);
         shooter2.setDirection(DcMotor.Direction.REVERSE);
         drive.setPoseEstimate(new Pose2d(-62, -50));
@@ -163,24 +154,31 @@ public class AutoOpMode2 extends LinearOpMode {
         // Get recognitions from TensorFlow engine.
         recognitions = tfodUltimateGoal.getRecognitions();
 
-        // Initialize index variable.
-        index = 0;
-
-        // Iterate through recognitions.
-        for (Recognition recognition : recognitions) {
-            // Define recognition.
-            this.recognition = recognition;
-
-            // Display info regarding recognition.
-            displayInfo(index);
-
-            // Increment index.
-            index++;
+        // If there are no recognitions.
+        if (recognitions.size() == 0) {
+            telemetry.addData("TFOD", "No items detected.");
+            telemetry.addData("TargetZone", "A");
+            telemetry.update();
+            wobbleGoalZone = 1;
         }
 
-        // Update telemetry.
-        telemetry.addData(">", "Press Play to start");
-        telemetry.update();
+        // If there are recognitions.
+        else {
+            // Initialize index variable.
+            index = 0;
+
+            // Iterate through recognitions.
+            for (Recognition recognition : recognitions) {
+                // Define recognition.
+                this.recognition = recognition;
+
+                // Display info regarding recognition.
+                displayInfo(index);
+
+                // Increment index.
+                index++;
+            }
+        }
 
         // Wait for start command from Driver Station.
         waitForStart();
@@ -196,6 +194,7 @@ public class AutoOpMode2 extends LinearOpMode {
             if (recognitions.size() == 0) {
                 telemetry.addData("TFOD", "No items detected.");
                 telemetry.addData("TargetZone", "A");
+                telemetry.update();
                 wobbleGoalZone = 1;
             }
 
@@ -262,7 +261,7 @@ public class AutoOpMode2 extends LinearOpMode {
         // Go to point B (-1, -50)
         Trajectory trajectory1 = drive.trajectoryBuilder(new Pose2d(-62, -50)) // 1) Start.
                 // 2) Spline to powershot and 1st drop-off position.
-                .splineTo(new Vector2d(-1, 50), Math.toRadians(powershotAngle))
+                .splineTo(new Vector2d(-1, -50), Math.toRadians(powershotAngle))
 
                 // End trajectory.
                 .build();
@@ -280,7 +279,7 @@ public class AutoOpMode2 extends LinearOpMode {
 
         // Trajectory 2 to pick wobble
         // Go to point C (-35, -20) to pick wobble
-        Trajectory trajectory2 = drive.trajectoryBuilder(trajectory1.end())
+        Trajectory trajectory2 = drive.trajectoryBuilder(new Pose2d(-1, -50))
                 // 3) Spline to second wobble goal.
                 .splineTo(new Vector2d(-37, -22), Math.toRadians(180))
 
@@ -314,6 +313,9 @@ public class AutoOpMode2 extends LinearOpMode {
                 new Pose2d(-10, -58, Math.toRadians(90)))
                 // 5) Spline to parking point.
                 .splineTo(new Vector2d(11, -30), Math.toRadians(0))
+
+                // TODO Remove after, splines back to start.
+                .splineToSplineHeading(new Pose2d(-62, -50), Math.toRadians(180))
 
                 .build();
         drive.followTrajectory(trajectory4);
@@ -354,7 +356,7 @@ public class AutoOpMode2 extends LinearOpMode {
         deactivateShooters();
 
         // Trajectory 2.
-        Trajectory trajectory2 = drive.trajectoryBuilder(trajectory1.end())
+        Trajectory trajectory2 = drive.trajectoryBuilder(new Pose2d(-1, -50))
                 // 3) Spline to 1st drop-off point at middle zone.
                 .splineTo(new Vector2d(15, -33), Math.toRadians(90))
 
@@ -362,9 +364,9 @@ public class AutoOpMode2 extends LinearOpMode {
         drive.followTrajectory(trajectory2);
 
         // Drop the first wobble goal.
-        drive.turn(Math.toRadians(-90));
+        drive.turn(Math.toRadians(-60));
         dropWobbleGoal();
-        drive.turn(Math.toRadians(90));
+        drive.turn(Math.toRadians(60));
 
         // Trajectory 3.
         Trajectory trajectory3 = drive.trajectoryBuilder(trajectory2.end())
@@ -409,6 +411,9 @@ public class AutoOpMode2 extends LinearOpMode {
                 // 7) Spline to 2nd drop-off point at middle zone.
                 .splineTo(new Vector2d(15, -43.5), Math.toRadians(0))
 
+                // TODO Remove after, splines back to start.
+                .splineToSplineHeading(new Pose2d(-62, -50), Math.toRadians(180))
+
                 .build();
         drive.followTrajectory(trajectory6);
 
@@ -420,6 +425,23 @@ public class AutoOpMode2 extends LinearOpMode {
      * Goes to closest square if there are 0 rings.
      */
     private void farZone() {
+        /*  Program
+                Start at A (-62, -52)
+                Go to B (-1, -50)
+                    Shoot and reset angle
+                Go to C (40, -60)
+                    Drop wobble and reset angle
+                Go to D (-37, -22)
+                    Pick wobble
+                Go to E (-28.5, -36.5)
+                    Intake
+                Go to F (-12, -36.5)
+                    Shoot high goals
+                Go to G (50, -40)
+                    Drop wobble
+                Go to H (11, -30) to park.
+         */
+
         // Trajectory 1.
         Trajectory trajectory1 = drive.trajectoryBuilder(new Pose2d(-62, -50)) // 1) Start.
                 // 2) Spline to powershot position.
@@ -428,13 +450,13 @@ public class AutoOpMode2 extends LinearOpMode {
                 .build();
         drive.followTrajectory(trajectory1);
 
-        /*/ Shoot 3 powershots.
+        // Shoot 3 powershots.
         activateShooters();
         shootPowershots();
-        deactivateShooters();*/
+        deactivateShooters();
 
         // Trajectory 2.
-        Trajectory trajectory2 = drive.trajectoryBuilder(trajectory1.end())
+        Trajectory trajectory2 = drive.trajectoryBuilder(new Pose2d(-1, -50))
                 // 3) Spline to 1st drop-off point at far zone.
                 .splineTo(new Vector2d(40, -60), Math.toRadians(0))
 
@@ -442,7 +464,7 @@ public class AutoOpMode2 extends LinearOpMode {
         drive.followTrajectory(trajectory2);
 
         // Drop the first wobble goal.
-        //dropWobbleGoal();
+        dropWobbleGoal();
 
         // Trajectory 3.
         Trajectory trajectory3 = drive.trajectoryBuilder(trajectory2.end())
@@ -453,7 +475,7 @@ public class AutoOpMode2 extends LinearOpMode {
         drive.followTrajectory(trajectory3);
 
         // Pick up the second wobble goal.
-        //obtainWobbleGoal();
+        obtainWobbleGoal();
 
         // Trajectory 4.
         Trajectory trajectory4 = drive.trajectoryBuilder(trajectory3.end())
@@ -464,48 +486,44 @@ public class AutoOpMode2 extends LinearOpMode {
         drive.followTrajectory(trajectory4);
 
         // Run intake mechanism to collect 3 rings.
-        //activateIntake();
+        activateIntake();
+
+        deactivateIntake();
 
         // Trajectory 5.
         Trajectory trajectory5 = drive.trajectoryBuilder(trajectory4.end())
-                .forward(intakeDistance)
-
-                .build();
-        drive.followTrajectory(trajectory5);
-
-        //deactivateIntake();
-
-        // Trajectory 6.
-        Trajectory trajectory6 = drive.trajectoryBuilder(trajectory5.end())
                 // 6) Spline to shooting point.
                 .splineTo(new Vector2d(-12, -36.5), Math.toRadians(0))
 
                 .build();
-        drive.followTrajectory(trajectory6);
+        drive.followTrajectory(trajectory5);
 
-        /*/ Shoot 3 rings into high goal.
+        // Shoot 3 rings into high goal.
         activateShooters();
         shootHighGoals();
-        deactivateShooters();*/
+        deactivateShooters();
 
         // Trajectory 7.
-        Trajectory trajectory7 = drive.trajectoryBuilder(trajectory6.end())
+        Trajectory trajectory6 = drive.trajectoryBuilder(trajectory5.end())
                 // 7) Spline to 2nd drop-off point at far zone.
                 .splineTo(new Vector2d(50, -40), Math.toRadians(270))
 
                 .build();
-        drive.followTrajectory(trajectory7);
+        drive.followTrajectory(trajectory6);
 
         // Drop the second wobble goal.
-        //dropWobbleGoal();
+        dropWobbleGoal();
 
         // Trajectory 8.
-        Trajectory trajectory8 = drive.trajectoryBuilder(trajectory7.end())
+        Trajectory trajectory7 = drive.trajectoryBuilder(trajectory6.end())
                 // 8) Spline to parking point.
                 .splineTo(new Vector2d(11, -30), Math.toRadians(90))
 
+                // TODO Remove after, splines back to start.
+                .splineToSplineHeading(new Pose2d(-62, -50), Math.toRadians(180))
+
                 .build();
-        drive.followTrajectory(trajectory8);
+        drive.followTrajectory(trajectory7);
     }
 
     /**
@@ -514,26 +532,31 @@ public class AutoOpMode2 extends LinearOpMode {
     private void shootPowershots() {
         // Initialize variables.
         int restorationAngle = 0;
+        int decrementAngle = 0;
 
         for (int i = 0; i < 2; i++) {
             // Shoot a ring.
             shoot();
 
             // Turn 5° counterclockwise.
-            drive.turn(Math.toRadians(powershotTurn));
+            drive.turn(Math.toRadians(powershotRotation));
 
             // Increment restoration angle.
             restorationAngle++;
+
+            /*/ Decrement restoration angle.
+            decrementAngle++;
+            powershotAngle -= decrementAngle;*/
         }
 
         // Shoot the last ring.
         shoot();
 
         // Calculate restoration angle.
-        restorationAngle *= -powershotTurn;
+        restorationAngle *= -powershotRotation;
 
         // Restore angle.
-        drive.turn(Math.toRadians(restorationAngle));
+        drive.turn(Math.toRadians(restorationAngle - powershotAngle)); //- decrementAngle));
     }
 
     /**
@@ -552,9 +575,9 @@ public class AutoOpMode2 extends LinearOpMode {
     private void shoot() {
         // TODO Test how long servo takes at the Makerspace.
         indexer.setPosition(indexerUpPosition);
-        sleep(500);
+        sleep(250);
         indexer.setPosition(indexerDownPosition);
-        sleep(500);
+        sleep(250);
     }
 
     /**
@@ -565,7 +588,7 @@ public class AutoOpMode2 extends LinearOpMode {
         elbow.setPosition(elbowDownPosition);
         sleep(500);
         jaw.setPosition(jawOpenPosition);
-        sleep(500);
+        sleep(250);
     }
 
     /**
@@ -574,11 +597,11 @@ public class AutoOpMode2 extends LinearOpMode {
     private void obtainWobbleGoal() {
         // TODO Close elbow before shooting.
         elbow.setPosition(elbowDownPosition);
-        sleep(500);
+        sleep(250);
         jaw.setPosition(jawClosePosition);
-        sleep(500);
+        sleep(250);
         elbow.setPosition(elbowUpPosition);
-        sleep(500);
+        sleep(250);
     }
 
     /**
@@ -590,30 +613,27 @@ public class AutoOpMode2 extends LinearOpMode {
 
         // Set hopper down.
         hopper.setPosition(hopperInputAngle);
-        transfer.setPower(transferPowerSetting);
-        sleep(500);
+        transfer.setPower(transferOnSetting);
+        sleep(250);
 
         // Run intake mechanism.
         cameraServo.setPosition(openIntakePosition);
-        intake.setPower(intakePowerSetting);
-        sleep(500);
+        intake.setPower(intakeOnSetting);
+        sleep(250);
     }
 
     /**
      * Turn off intake mechanism.
      */
     private void deactivateIntake() {
-        // Wait.
-        sleep(500);
-
         // Stop intake mechanism.
-        intake.setPower(0);
-        transfer.setPower(0);
-        sleep(500);
+        intake.setPower(intakeOffSetting);
+        transfer.setPower(transferOffSetting);
+        sleep(250);
 
         // Set hopper up.
         hopper.setPosition(hopperOutputAngle);
-        sleep(500);
+        sleep(250);
     }
 
     /**
@@ -622,7 +642,7 @@ public class AutoOpMode2 extends LinearOpMode {
     private void activateShooters() {
         shooter1.setPower(shooterPowerSettingLow);
         shooter2.setPower(shooterPowerSettingLow);
-        sleep(500);
+        sleep(250);
     }
 
     /**
@@ -630,10 +650,10 @@ public class AutoOpMode2 extends LinearOpMode {
      */
     private void deactivateShooters() {
         indexer.setPosition(indexerDownPosition);
-        sleep(500);
+        sleep(250);
         shooter1.setPower(0);
         shooter2.setPower(0);
-        sleep(500);
+        sleep(250);
     }
 
     /**

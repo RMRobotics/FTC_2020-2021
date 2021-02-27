@@ -53,10 +53,10 @@ public class MecanumOpMode extends LinearOpMode {
         indexer     = hardwareMap.servo.get("indexer");
 
         //initializing default servo value
-        double elbowUpAngle         = 0.05;
-        double elbowDownAngle       = 0.6;
+        double elbowUpAngle         = 0.3;
+        double elbowDownAngle       = 0.71;
         double jawOpenAngle         = 0.1;
-        double jawClosedAngle       = 0.36;
+        double jawClosedAngle       = 0.38;
         double hopperInputAngle     = 0.1;
         double hopperOutputAngle    = 0.29;
         double indexerUpAngle       = 0.3;
@@ -66,6 +66,21 @@ public class MecanumOpMode extends LinearOpMode {
         double hopperPosition       = hopperInputAngle;
         double indexerPosition      = indexerDownAngle;
 
+        double intakePower = 0;
+        double shooterPower = 0;
+        double transferPower = 0;
+
+        boolean gamepad2IsDominant;
+        boolean rightTriggerOnePressed;
+        boolean leftTriggerOnePressed;
+
+        double drive;
+        double strafe;
+        double twist;
+
+        double[] speeds;
+        double max;
+
         //setting shooters to use encoders
         shooter1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         shooter2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -74,13 +89,20 @@ public class MecanumOpMode extends LinearOpMode {
 
         while (opModeIsActive())
         {
-            double intakePower      = gamepad1.right_trigger;
-            double shooterPower     = -gamepad2.right_trigger;
-            double transferPower    = gamepad1.left_trigger;
+            shooterPower = 0;
+            intakePower     = gamepad1.right_trigger;
+            transferPower   = gamepad1.left_trigger;
 
-            boolean gamepad2IsDominant = gamepad2.right_trigger > gamepad1.right_trigger;
-            boolean rightTriggerOnePressed = gamepad1.right_trigger < .1;
-            boolean leftTriggerOnePressed = gamepad1.left_trigger > .1;
+            gamepad2IsDominant = gamepad2.right_trigger > gamepad1.right_trigger;
+            rightTriggerOnePressed = gamepad1.right_trigger < .1;
+            leftTriggerOnePressed = gamepad1.left_trigger > .1;
+
+            telemetry.addData("Trigger value: ", gamepad2.right_trigger);
+
+            if (gamepad2.right_trigger > 0.1) {
+                shooterPower = -gamepad2.right_trigger;
+                hopperPosition = hopperOutputAngle;
+            }
 
             // TODO When press right trigger, shoot 3.
             // TODO Make indexer travel less.
@@ -96,21 +118,23 @@ public class MecanumOpMode extends LinearOpMode {
                 transferPower = -gamepad1.left_trigger;
                 intakePower = -gamepad1.left_trigger;
             }
-            if (gamepad2.right_bumper)
+            else if (gamepad2.left_bumper && hopperServo.getPosition() == hopperOutputAngle)
             {
-                indexerPosition = indexerUpAngle;
-            }
-            else if (gamepad2.left_bumper)
-            {
-                indexerPosition = indexerDownAngle;
+                for (int i = 0; i < 3; i++)
+                {
+                    indexer.setPosition(indexerUpAngle);
+                    sleep(250);
+                    indexer.setPosition(indexerDownAngle);
+                    sleep(250);
+                }
             }
 
             flMotor.setDirection(DcMotor.Direction.REVERSE);
             blMotor.setDirection(DcMotor.Direction.REVERSE);
 
-            double drive = gamepad1.left_stick_y;
-            double strafe = -gamepad1.left_stick_x;
-            double twist = -gamepad1.right_stick_x;
+            drive = gamepad1.left_stick_y;
+            strafe = -gamepad1.left_stick_x;
+            twist = -gamepad1.right_stick_x;
 
 
             if (gamepad1.x) {
@@ -125,14 +149,14 @@ public class MecanumOpMode extends LinearOpMode {
             if (gamepad2.x) jawPosition = jawClosedAngle;
             else if (gamepad2.y) jawPosition = jawOpenAngle;
 
-            double[] speeds = {
+            speeds = new double[]{
                     (drive + strafe +twist),
                     (drive - strafe - twist),
                     (drive - strafe + twist),
                     (drive + strafe - twist)
             };
 
-            double max = Math.abs(speeds[0]);
+            max = Math.abs(speeds[0]);
             for (double speed : speeds) {
                 if (max < Math.abs(speed)) max = Math.abs(speed);
             }
@@ -176,8 +200,8 @@ public class MecanumOpMode extends LinearOpMode {
 
             indexer.setPosition(indexerPosition);
 
-            shooter1.setPower(shooterPower);
-            shooter2.setPower(shooterPower);
+            shooter1.setPower(shooterPower * 0.6);
+            shooter2.setPower(shooterPower * 0.6);
 
             intake.setPower(intakePower);
 

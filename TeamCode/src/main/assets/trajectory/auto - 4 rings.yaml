@@ -47,5 +47,11 @@ waypoints:
   heading: 0.0
   tangent: 1.5707963267948966
   interpolationType: "TANGENT"
+- position:
+    x: -62.0
+    y: -50.0
+  heading: 0.0
+  tangent: 3.141592653589793
+  interpolationType: "TANGENT"
 resolution: 0.25
 version: 1
