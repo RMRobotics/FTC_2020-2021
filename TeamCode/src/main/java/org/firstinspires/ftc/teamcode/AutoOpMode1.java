@@ -261,17 +261,17 @@ public class AutoOpMode1 extends LinearOpMode {
      * Goes to farthest square if there are 4 rings.
      */
     private void closeZone() {
-    /*  Program
-            Start at A (-62, -52)
-            Go to B (-1, -50)
-                Shoot and reset angle
-                Drop wobble and reset angle
-            Go to C (-35, -20)
-                Pick wobble
-            Go to D (-10, -58)
-                Drop Wobble
-            Go to E (11, -30) to park
-     */
+        /*  Program
+                Start at A (-62, -52)
+                Go to B (-1, -50)
+                    Shoot and reset angle
+                    Drop wobble and reset angle
+                Go to C (-35, -20)
+                    Pick wobble
+                Go to D (-10, -58)
+                    Drop Wobble
+                Go to E (11, -30) to park
+         */
 
         // Trajectory 1 to shoot and drop wobble
         // Start at point A (-62, -50)
@@ -288,10 +288,10 @@ public class AutoOpMode1 extends LinearOpMode {
         shootHighGoals(3);
         deactivateShooters();
 
-    /*/ Shoot 3 powershots (pegs) with moves 5° each, back to same heading as start.
-    activateShooters(false);
-    shootPowershots();
-    deactivateShooters();*/
+        /*/ Shoot 3 powershots (pegs) with moves 5° each, back to same heading as start.
+        activateShooters(false);
+        shootPowershots();
+        deactivateShooters();*/
 
         // Trajectory 2.
         Trajectory trajectory2 = drive.trajectoryBuilder(trajectory1.end())
@@ -558,7 +558,7 @@ public class AutoOpMode1 extends LinearOpMode {
                 new Pose2d(35, -62, Math.toRadians(90)))
 
                 // 4) Spline to second wobble goal.
-                .splineTo(new Vector2d(-37, -22), Math.toRadians(180))
+                .splineTo(new Vector2d(-37, -21), Math.toRadians(180))
 
                 .build();
         drive.followTrajectory(trajectory3);
@@ -619,7 +619,7 @@ public class AutoOpMode1 extends LinearOpMode {
             drive.turn(Math.toRadians(180));
 
             // Trajectory 6.
-            Trajectory trajectory6 = drive.trajectoryBuilder(new Pose2d(-37, -22))
+            Trajectory trajectory6 = drive.trajectoryBuilder(new Pose2d(-37, -21))
                     // 7) Spline to 2nd drop-off point at far zone.
                     .splineTo(new Vector2d(50, -45), Math.toRadians(270))
 
