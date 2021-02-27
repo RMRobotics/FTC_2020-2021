@@ -347,7 +347,7 @@ public class AutoOpMode1 extends LinearOpMode {
         // Trajectory 5 to park.
         // Go to point E (11, -30) to Park.
         Trajectory trajectory5 = drive.trajectoryBuilder(
-                new Pose2d(-10, -58, Math.toRadians(90)))
+                new Pose2d(-15, -58, Math.toRadians(90)))
                 // 5) Spline to parking point.
                 .splineTo(new Vector2d(11, -30), Math.toRadians(0))
 
