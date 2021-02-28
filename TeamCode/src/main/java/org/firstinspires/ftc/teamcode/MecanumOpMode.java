@@ -33,7 +33,7 @@ public class MecanumOpMode extends LinearOpMode {
 
      */
     @Override
-    public void runOpMode() throws InterruptedException
+    public void runOpMode()
     {
 
         //mapping motors
@@ -66,13 +66,10 @@ public class MecanumOpMode extends LinearOpMode {
         double hopperPosition       = hopperInputAngle;
         double indexerPosition      = indexerDownAngle;
 
-        double intakePower = 0;
-        double shooterPower = 0;
-        double transferPower = 0;
+        double intakePower;
+        double shooterPower;
+        double transferPower;
 
-        boolean gamepad2IsDominant;
-        boolean rightTriggerOnePressed;
-        boolean leftTriggerOnePressed;
 
         double drive;
         double strafe;
@@ -93,9 +90,6 @@ public class MecanumOpMode extends LinearOpMode {
             intakePower     = gamepad1.right_trigger;
             transferPower   = gamepad1.left_trigger;
 
-            gamepad2IsDominant = gamepad2.right_trigger > gamepad1.right_trigger;
-            rightTriggerOnePressed = gamepad1.right_trigger < .1;
-            leftTriggerOnePressed = gamepad1.left_trigger > .1;
 
             telemetry.addData("Trigger value: ", gamepad2.right_trigger);
 
@@ -120,6 +114,10 @@ public class MecanumOpMode extends LinearOpMode {
             }
             else if (gamepad2.left_bumper && hopperServo.getPosition() == hopperOutputAngle)
             {
+                flMotor.setPower(0);
+                frMotor.setPower(0);
+                blMotor.setPower(0);
+                brMotor.setPower(0);
                 for (int i = 0; i < 3; i++)
                 {
                     indexer.setPosition(indexerUpAngle);
@@ -200,8 +198,8 @@ public class MecanumOpMode extends LinearOpMode {
 
             indexer.setPosition(indexerPosition);
 
-            shooter1.setPower(shooterPower * 0.6);
-            shooter2.setPower(shooterPower * 0.6);
+            shooter1.setPower(shooterPower * 0.65);
+            shooter2.setPower(shooterPower * 0.65);
 
             intake.setPower(intakePower);
 
