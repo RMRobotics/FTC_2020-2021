@@ -253,7 +253,7 @@ public class AllianceAutoMode extends LinearOpMode {
             } else if (wobbleGoalZone == 3) {
                 telemetry.addData("TargetZone", "A");
                 telemetry.update();
-                farZone();
+                //farZone();
             }
             cameraServo.setPosition(openIntakePosition);
         }

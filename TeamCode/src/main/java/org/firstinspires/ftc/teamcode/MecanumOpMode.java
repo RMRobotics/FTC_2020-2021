@@ -13,6 +13,7 @@ public class MecanumOpMode extends LinearOpMode {
     DcMotor shooter2;
     DcMotor transfer;
     Servo hopperServo;
+    Servo cameraServo;
 
     Servo jaw;
     Servo elbow;
@@ -50,6 +51,7 @@ public class MecanumOpMode extends LinearOpMode {
         jaw         = hardwareMap.servo.get("jaw");
         elbow       = hardwareMap.servo.get("elbow");
         hopperServo = hardwareMap.servo.get("hopper");
+        cameraServo = hardwareMap.servo.get("cameraServo");
         indexer     = hardwareMap.servo.get("indexer");
 
         //initializing default servo value
@@ -125,6 +127,8 @@ public class MecanumOpMode extends LinearOpMode {
                     indexer.setPosition(indexerDownAngle);
                     sleep(250);
                 }
+            } else if (gamepad2.right_bumper) {
+                cameraServo.setPosition(0.5);
             }
 
             flMotor.setDirection(DcMotor.Direction.REVERSE);
@@ -194,12 +198,10 @@ public class MecanumOpMode extends LinearOpMode {
                 brMotor.setPower(speeds[3]);
             }
 
-
-
             indexer.setPosition(indexerPosition);
 
-            shooter1.setPower(shooterPower * 0.65);
-            shooter2.setPower(shooterPower * 0.65);
+            shooter1.setPower(shooterPower * 0.6);
+            shooter2.setPower(shooterPower * 0.6);
 
             intake.setPower(intakePower);
 

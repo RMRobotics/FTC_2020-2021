@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDrive;
 
 import java.util.List;
 
-@Autonomous(name="AutoOpMode (Blue)")
+@Autonomous(name="AutoOpMode (Blue) OLD")
 public class AutoOpMode2 extends LinearOpMode {
     // Data field.
     private VuforiaCurrentGame vuforiaUltimateGoal;
@@ -151,34 +151,9 @@ public class AutoOpMode2 extends LinearOpMode {
         tfodUltimateGoal.activate();
         tfodUltimateGoal.setZoom(2.5, 16 / 9.0);
 
-        // Get recognitions from TensorFlow engine.
-        recognitions = tfodUltimateGoal.getRecognitions();
-
-        // If there are no recognitions.
-        if (recognitions.size() == 0) {
-            telemetry.addData("TFOD", "No items detected.");
-            telemetry.addData("TargetZone", "A");
-            telemetry.update();
-            wobbleGoalZone = 1;
-        }
-
-        // If there are recognitions.
-        else {
-            // Initialize index variable.
-            index = 0;
-
-            // Iterate through recognitions.
-            for (Recognition recognition : recognitions) {
-                // Define recognition.
-                this.recognition = recognition;
-
-                // Display info regarding recognition.
-                displayInfo(index);
-
-                // Increment index.
-                index++;
-            }
-        }
+        // Update telemetry.
+        telemetry.addData(">", "Press Play to start");
+        telemetry.update();
 
         // Wait for start command from Driver Station.
         waitForStart();
